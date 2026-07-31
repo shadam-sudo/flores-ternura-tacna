@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¡Gracias por tu compra! | Flores & Ternura Tacna</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap nav">
+    <a href="index.html" class="logo">Flores <span>&</span> Ternura <span>Tacna</span></a>
+  </div>
+</header>
+<div class="ribbon"></div>
+<main class="wrap" style="padding:80px 0;text-align:center;">
+  <h1>¡Gracias por tu pedido! 🌸</h1>
+  <p style="max-width:50ch;margin:0 auto 24px;color:#544943;">
+    Tu pago fue procesado por Mercado Pago. Nos pondremos en contacto por WhatsApp
+    para coordinar la entrega en Tacna. Si tienes alguna duda, escríbenos.
+  </p>
+  <a class="btn btn-primary" href="https://wa.me/51900000000" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+  <p style="margin-top:24px;"><a href="index.html" style="color:var(--wine);">Volver al inicio</a></p>
+</main>
+<script>
+  // Limpia el carrito tras un pago exitoso
+  localStorage.removeItem("flt_cart");
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#F3E7DC"/>
+  <g transform="translate(200,190)">
+    <ellipse cx="0" cy="-55" rx="34" ry="46" fill="#6B1E3C"/>
+    <ellipse cx="47" cy="-20" rx="34" ry="46" fill="#8A2C4E" transform="rotate(72)"/>
+    <ellipse cx="29" cy="45" rx="34" ry="46" fill="#6B1E3C" transform="rotate(144)"/>
+    <ellipse cx="-29" cy="45" rx="34" ry="46" fill="#8A2C4E" transform="rotate(216)"/>
+    <ellipse cx="-47" cy="-20" rx="34" ry="46" fill="#6B1E3C" transform="rotate(288)"/>
+    <circle cx="0" cy="0" r="26" fill="#B8862E"/>
+    <path d="M0,60 C -10,120 -6,160 -18,200" stroke="#6B7A5E" stroke-width="8" fill="none"/>
+    <path d="M-8,140 C -30,150 -42,145 -55,160" stroke="#6B7A5E" stroke-width="7" fill="none"/>
+  </g>
+  <text x="200" y="370" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#9c8f86">foto próximamente</text>
+</svg>
