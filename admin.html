@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel de administración | Flores & Ternura Tacna</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-wrap{max-width:920px;margin:0 auto;padding:40px 24px 80px;}
+  .admin-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:24px;}
+  .admin-card h2{font-size:1.2rem;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:.85rem;font-weight:600;margin-bottom:5px;color:#544943;}
+  .field input[type=text],.field input[type=number],.field input[type=password],.field select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.95rem;
+  }
+  .checks{display:flex;flex-wrap:wrap;gap:10px;}
+  .checks label{font-weight:400;font-size:.85rem;display:flex;align-items:center;gap:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#F3E7DC;}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
+  .mini-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.8rem;margin-right:4px;}
+  .mini-btn.danger{color:#a12a2a;border-color:#e2b8b8;}
+  #login-screen{max-width:360px;margin:100px auto;text-align:center;}
+  #status-msg{font-size:.9rem;margin-top:10px;padding:10px;border-radius:8px;display:none;}
+  #status-msg.ok{display:block;background:#e7f3e5;color:#2c5a2a;}
+  #status-msg.err{display:block;background:#fbe6e6;color:#a12a2a;}
+  #panel{display:none;}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a href="index.html" class="logo">Flores <span>&</span> Ternura <span>Tacna</span></a>
+    <span style="font-size:.85rem;color:var(--sage);">Panel de administración</span>
+  </div>
+</header>
+
+<div id="login-screen">
+  <h2>Ingresar</h2>
+  <p style="color:#6b5f57;font-size:.9rem;">Ingresa la contraseña del panel.</p>
+  <div class="field"><input type="password" id="login-password" placeholder="Contraseña"></div>
+  <button class="btn btn-primary" style="width:100%;" onclick="login()">Entrar</button>
+  <p id="login-error" style="color:#a12a2a;font-size:.85rem;margin-top:10px;"></p>
+</div>
+
+<div id="panel" class="admin-wrap">
+
+  <div class="admin-card">
+    <h2>Datos de contacto</h2>
+    <div class="row2">
+      <div class="field">
+        <label>WhatsApp (formato: 51 + número, sin espacios)</label>
+        <input type="text" id="site-whatsapp" placeholder="51900000000">
+      </div>
+      <div class="field">
+        <label>Correo de contacto</label>
+        <input type="text" id="site-email" placeholder="contacto@tudominio.com">
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2 id="form-title">Agregar producto</h2>
+    <div class="row2">
+      <div class="field">
+        <label>Nombre del producto</label>
+        <input type="text" id="p-nombre" placeholder="Ramo de 12 Rosas Rojas">
+      </div>
+      <div class="field">
+        <label>Precio (S/)</label>
+        <input type="number" id="p-precio" placeholder="89" min="0" step="1">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Categoría</label>
+        <select id="p-categoria"></select>
+      </div>
+      <div class="field">
+        <label>Foto del producto</label>
+        <input type="file" id="p-img-file" accept="image/*" onchange="uploadImage()">
+        <div id="p-img-status" style="font-size:.8rem;color:#6b5f57;margin-top:4px;"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Ocasiones</label>
+      <div class="checks" id="p-ocasiones"></div>
+    </div>
+    <div class="field">
+      <label>Descripción corta</label>
+      <input type="text" id="p-desc" placeholder="Ramo clásico envuelto en papel kraft con cinta.">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveProductForm()" id="save-product-btn">Agregar a la lista</button>
+      <button class="btn btn-outline" onclick="resetForm()" id="cancel-edit-btn" style="display:none;">Cancelar edición</button>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Productos (<span id="prod-count">0</span>)</h2>
+    <table>
+      <thead><tr><th></th><th>Nombre</th><th>Categoría</th><th>Precio</th><th></th></tr></thead>
+      <tbody id="prod-table-body"></tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-primary" style="width:100%;padding:16px;font-size:1.05rem;" onclick="publishChanges()">Publicar cambios en la tienda</button>
+  <p style="font-size:.8rem;color:#6b5f57;text-align:center;margin-top:8px;">Los cambios tardan ~1 minuto en verse reflejados en tu tienda.</p>
+  <div id="status-msg"></div>
+</div>
+
+<script src="taxonomy.js"></script>
+<script>
+let PASSWORD = "";
+let STATE = { site: {}, products: [] };
+let editingId = null;
+
+function login(){
+  const password = document.getElementById("login-password").value;
+  fetch("/api/admin-login", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ password })
+  }).then(r => r.json()).then(data => {
+    if(data.ok){
+      PASSWORD = password;
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      loadState();
+    } else {
+      document.getElementById("login-error").textContent = data.error || "Contraseña incorrecta.";
+    }
+  }).catch(() => {
+    document.getElementById("login-error").textContent = "Error de conexión.";
+  });
+}
+
+async function loadState(){
+  const res = await fetch("products.json?t=" + Date.now());
+  const data = await res.json();
+  STATE = { site: data.site || {}, products: data.products || [] };
+  document.getElementById("site-whatsapp").value = STATE.site.whatsapp || "";
+  document.getElementById("site-email").value = STATE.site.email || "";
+
+  const catSel = document.getElementById("p-categoria");
+  catSel.innerHTML = CATEGORIAS.map(c => `<option value="${c.key}">${c.label}</option>`).join("");
+
+  const ocWrap = document.getElementById("p-ocasiones");
+  ocWrap.innerHTML = OCASIONES.map(o => `<label><input type="checkbox" value="${o.key}"> ${o.label}</label>`).join("");
+
+  renderTable();
+}
+
+function renderTable(){
+  const body = document.getElementById("prod-table-body");
+  document.getElementById("prod-count").textContent = STATE.products.length;
+  body.innerHTML = STATE.products.map(p => `
+    <tr>
+      <td><img class="thumb" src="${p.img}" alt=""></td>
+      <td>${p.nombre}</td>
+      <td>${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</td>
+      <td>S/ ${Number(p.precio).toFixed(2)}</td>
+      <td>
+        <button class="mini-btn" onclick="editProduct(${p.id})">Editar</button>
+        <button class="mini-btn danger" onclick="deleteProduct(${p.id})">Eliminar</button>
+      </td>
+    </tr>`).join("");
+}
+
+let pendingImg = null;
+
+async function uploadImage(){
+  const file = document.getElementById("p-img-file").files[0];
+  if(!file) return;
+  const statusEl = document.getElementById("p-img-status");
+  statusEl.textContent = "Subiendo imagen...";
+  const base64 = await fileToBase64(file);
+  try{
+    const res = await fetch("/api/admin-upload-image", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, filename: file.name, contentBase64: base64 })
+    });
+    const data = await res.json();
+    if(data.ok){
+      pendingImg = data.url;
+      statusEl.textContent = "Imagen lista ✓";
+    } else {
+      statusEl.textContent = "Error: " + (data.error || "no se pudo subir");
+    }
+  } catch(e){
+    statusEl.textContent = "Error de conexión al subir la imagen.";
+  }
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveProductForm(){
+  const nombre = document.getElementById("p-nombre").value.trim();
+  const precio = parseFloat(document.getElementById("p-precio").value);
+  const categoria = document.getElementById("p-categoria").value;
+  const desc = document.getElementById("p-desc").value.trim();
+  const ocasiones = Array.from(document.querySelectorAll("#p-ocasiones input:checked")).map(el => el.value);
+
+  if(!nombre || isNaN(precio)){
+    alert("Completa al menos el nombre y el precio.");
+    return;
+  }
+
+  if(editingId){
+    const p = STATE.products.find(x => x.id === editingId);
+    p.nombre = nombre; p.precio = precio; p.categoria = categoria; p.desc = desc; p.ocasiones = ocasiones;
+    if(pendingImg) p.img = pendingImg;
+  } else {
+    const nextId = STATE.products.length ? Math.max(...STATE.products.map(p=>p.id)) + 1 : 1;
+    STATE.products.push({
+      id: nextId, nombre, precio, categoria, desc, ocasiones,
+      img: pendingImg || "ph-flor.svg"
+    });
+  }
+  resetForm();
+  renderTable();
+}
+
+function editProduct(id){
+  const p = STATE.products.find(x => x.id === id);
+  if(!p) return;
+  editingId = id;
+  pendingImg = null;
+  document.getElementById("form-title").textContent = "Editar producto";
+  document.getElementById("p-nombre").value = p.nombre;
+  document.getElementById("p-precio").value = p.precio;
+  document.getElementById("p-categoria").value = p.categoria;
+  document.getElementById("p-desc").value = p.desc || "";
+  document.querySelectorAll("#p-ocasiones input").forEach(el => {
+    el.checked = p.ocasiones.includes(el.value);
+  });
+  document.getElementById("save-product-btn").textContent = "Guardar cambios";
+  document.getElementById("cancel-edit-btn").style.display = "inline-block";
+  window.scrollTo({ top: 300, behavior: "smooth" });
+}
+
+function deleteProduct(id){
+  if(!confirm("¿Eliminar este producto de la lista?")) return;
+  STATE.products = STATE.products.filter(p => p.id !== id);
+  renderTable();
+}
+
+function resetForm(){
+  editingId = null;
+  pendingImg = null;
+  document.getElementById("form-title").textContent = "Agregar producto";
+  document.getElementById("p-nombre").value = "";
+  document.getElementById("p-precio").value = "";
+  document.getElementById("p-desc").value = "";
+  document.getElementById("p-img-status").textContent = "";
+  document.getElementById("p-img-file").value = "";
+  document.querySelectorAll("#p-ocasiones input").forEach(el => el.checked = false);
+  document.getElementById("save-product-btn").textContent = "Agregar a la lista";
+  document.getElementById("cancel-edit-btn").style.display = "none";
+}
+
+async function publishChanges(){
+  STATE.site.whatsapp = document.getElementById("site-whatsapp").value.trim();
+  STATE.site.email = document.getElementById("site-email").value.trim();
+
+  const statusEl = document.getElementById("status-msg");
+  statusEl.className = ""; statusEl.style.display = "none";
+
+  try{
+    const res = await fetch("/api/admin-save", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, site: STATE.site, products: STATE.products })
+    });
+    const data = await res.json();
+    if(data.ok){
+      statusEl.className = "ok";
+      statusEl.textContent = "✓ Cambios publicados. Tu tienda se actualizará en ~1 minuto.";
+    } else {
+      statusEl.className = "err";
+      statusEl.textContent = "Error: " + (data.error || "no se pudo guardar.");
+    }
+  } catch(e){
+    statusEl.className = "err";
+    statusEl.textContent = "Error de conexión al guardar.";
+  }
+  statusEl.style.display = "block";
+}
+</script>
+</body>
+</html>

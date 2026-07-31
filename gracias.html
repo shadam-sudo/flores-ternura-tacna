@@ -19,12 +19,20 @@
     Tu pago fue procesado por Mercado Pago. Nos pondremos en contacto por WhatsApp
     para coordinar la entrega en Tacna. Si tienes alguna duda, escríbenos.
   </p>
-  <a class="btn btn-primary" href="https://wa.me/51900000000" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+  <a class="btn btn-primary" href="https://wa.me/51900000000" data-wa-link target="_blank" rel="noopener">Escribir por WhatsApp</a>
   <p style="margin-top:24px;"><a href="index.html" style="color:var(--wine);">Volver al inicio</a></p>
 </main>
 <script>
   // Limpia el carrito tras un pago exitoso
   localStorage.removeItem("flt_cart");
+  // Actualiza el link de WhatsApp con el número configurado en el panel
+  fetch("products.json?t=" + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      const wa = data.site && data.site.whatsapp;
+      if(wa) document.querySelectorAll("[data-wa-link]").forEach(a => a.href = "https://wa.me/" + wa);
+    })
+    .catch(() => {});
 </script>
 </body>
 </html>

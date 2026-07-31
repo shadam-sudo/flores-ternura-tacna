@@ -145,7 +145,22 @@ async function pagarConMercadoPago(){
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+// ---------- Aplica WhatsApp / correo cargados desde products.json ----------
+function applySiteConfig(){
+  document.querySelectorAll("[data-wa-link]").forEach(a => {
+    a.href = "https://wa.me/" + SITE.whatsapp;
+  });
+  document.querySelectorAll(".wa-display").forEach(el => {
+    el.textContent = "WhatsApp: " + SITE.whatsapp;
+  });
+  document.querySelectorAll(".email-link").forEach(el => {
+    if(SITE.email){ el.href = "mailto:" + SITE.email; el.textContent = SITE.email; }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadCatalog();
+  applySiteConfig();
   renderFeatured();
   renderCatalogFilters();
   renderCatalogGrid();
