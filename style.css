@@ -233,8 +233,11 @@ section{padding:56px 0;}
 .zona-item{
   display:flex; justify-content:space-between; align-items:center;
   background:rgba(255,255,255,.08); border-radius:8px; padding:10px 12px; margin-bottom:6px; font-size:.88rem;
+  cursor:pointer; transition:background .12s ease;
 }
+.zona-item:hover{background:rgba(255,255,255,.18);}
 .zona-price{font-weight:700; color:#f0d98a;}
+.zona-item-selected{background:rgba(184,134,46,.35) !important; border:1px solid var(--gold);}
 .zona-empty{font-size:.85rem; opacity:.85; padding:8px 2px;}
 
 /* ---------- Formularios y tarjetas reutilizables ---------- */

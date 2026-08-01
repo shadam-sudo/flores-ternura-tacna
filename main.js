@@ -113,7 +113,9 @@ function renderCartPage(){
   const codigoAplicado = (sessionStorage.getItem("flt_promo") || "").toUpperCase();
   const promoValida = promo.codigo && codigoAplicado === promo.codigo.toUpperCase();
   const descuento = promoValida ? subtotal * (promo.porcentaje / 100) : 0;
-  const total = subtotal - descuento;
+  const zonaSel = getZonaSeleccionada();
+  const envio = zonaSel ? zonaSel.precio : 0;
+  const total = subtotal - descuento + envio;
 
   const pagos = SITE.pagos || {};
   const metodosAlt = [];
@@ -150,7 +152,15 @@ function renderCartPage(){
 
         <div class="summary-line"><span>Subtotal</span><span>S/ ${subtotal.toFixed(2)}</span></div>
         ${promoValida ? `<div class="summary-line" style="color:#2c7a3e;"><span>Descuento</span><span>− S/ ${descuento.toFixed(2)}</span></div>` : ""}
-        <div class="summary-line"><span>Envío</span><span>Se coordina por WhatsApp</span></div>
+        <div class="summary-line">
+          <span>Envío${zonaSel ? ` (${zonaSel.distrito})` : ""}</span>
+          <span>${zonaSel ? (envio > 0 ? "S/ " + envio.toFixed(2) : "Gratis") : "Por definir"}</span>
+        </div>
+        <button class="mini-btn" style="width:100%;margin-bottom:10px;" onclick="toggleZonaPicker()">${zonaSel ? "Cambiar distrito" : "Elegir distrito de entrega"}</button>
+        <div id="cart-zona-picker" class="zona-box" style="display:none;margin-bottom:14px;padding:14px;">
+          <input type="text" id="zona-search" class="zona-input" placeholder="Escribe tu distrito..." oninput="filtrarZonas()" onfocus="filtrarZonas()">
+          <div id="zona-results" class="zona-results" style="max-height:180px;"></div>
+        </div>
         <div class="total-row"><span>Total</span><span>S/ ${total.toFixed(2)}</span></div>
 
         <div class="field" style="margin-top:6px;">
@@ -188,6 +198,14 @@ function renderCartPage(){
   renderMetodoPago();
 }
 
+function toggleZonaPicker(){
+  const el = document.getElementById("cart-zona-picker");
+  if(!el) return;
+  const open = el.style.display !== "none";
+  el.style.display = open ? "none" : "block";
+  if(!open) filtrarZonas();
+}
+
 function aplicarPromo(){
   const val = document.getElementById("promo-input").value.trim().toUpperCase();
   sessionStorage.setItem("flt_promo", val);
@@ -222,8 +240,10 @@ function renderMetodoPago(){
 function confirmarPagoWhatsApp(){
   const cart = getCart();
   const total = window._cartTotal || cartTotal();
+  const zonaSel = getZonaSeleccionada();
   const resumen = cart.map(i => `- ${i.nombre} x${i.qty}`).join("%0A");
-  const msg = `Hola! Acabo de realizar el pago de mi pedido (S/ ${total.toFixed(2)}):%0A${resumen}%0A%0AAdjunto la captura del pago.`;
+  const envioLine = zonaSel ? `%0AEnvío a ${zonaSel.distrito}: ${zonaSel.precio > 0 ? "S/ " + zonaSel.precio.toFixed(2) : "Gratis"}` : "";
+  const msg = `Hola! Acabo de realizar el pago de mi pedido (S/ ${total.toFixed(2)}):%0A${resumen}${envioLine}%0A%0AAdjunto la captura del pago.`;
   window.open(`https://wa.me/${SITE.whatsapp}?text=${msg}`, "_blank");
   localStorage.removeItem("flt_cart");
   window.location.href = "gracias.html";
@@ -247,6 +267,10 @@ async function pagarConMercadoPago(){
       if(promoValida) title += ` [${promo.codigo} -${promo.porcentaje}%]`;
       return { title, qty: i.qty, price: Math.round(i.precio * factor * 100) / 100 };
     });
+    const zonaSel = getZonaSeleccionada();
+    if(zonaSel && zonaSel.precio > 0){
+      items.push({ title: `Envío a ${zonaSel.distrito}`, qty: 1, price: zonaSel.precio });
+    }
     const res = await fetch("/api/create-preference", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -355,6 +379,21 @@ function renderProductPage(){
     </div>`;
 }
 
+function guardarZonaSeleccionada(distrito, precio){
+  localStorage.setItem("flt_zona", JSON.stringify({ distrito, precio }));
+}
+
+function getZonaSeleccionada(){
+  try{ return JSON.parse(localStorage.getItem("flt_zona")) || null; }
+  catch(e){ return null; }
+}
+
+function seleccionarZona(distrito, precio){
+  guardarZonaSeleccionada(distrito, precio);
+  filtrarZonas();
+  if(document.getElementById("cart-page")) renderCartPage();
+}
+
 function filtrarZonas(){
   const input = document.getElementById("zona-search");
   const resultsEl = document.getElementById("zona-results");
@@ -362,6 +401,7 @@ function filtrarZonas(){
   const query = input.value.trim().toLowerCase();
   const zonas = (SITE.zonasEnvio && SITE.zonasEnvio.length) ? SITE.zonasEnvio : DEFAULT_ZONAS;
   const filtradas = query ? zonas.filter(z => z.distrito.toLowerCase().includes(query)) : zonas;
+  const seleccionada = getZonaSeleccionada();
 
   if(!filtradas.length){
     resultsEl.innerHTML = `<div class="zona-empty">No encontramos ese distrito. Escríbenos por WhatsApp y coordinamos.</div>`;
@@ -369,8 +409,8 @@ function filtrarZonas(){
   }
 
   resultsEl.innerHTML = filtradas.map(z => `
-    <div class="zona-item">
-      <span>${z.distrito}</span>
+    <div class="zona-item ${seleccionada && seleccionada.distrito === z.distrito ? "zona-item-selected" : ""}" onclick="seleccionarZona('${z.distrito.replace(/'/g,"\\'")}', ${z.precio})">
+      <span>${seleccionada && seleccionada.distrito === z.distrito ? "✓ " : ""}${z.distrito}</span>
       <span class="zona-price">${z.precio > 0 ? "S/ " + z.precio.toFixed(2) : "Gratis"}</span>
     </div>`).join("");
 }
