@@ -220,6 +220,23 @@ section{padding:56px 0;}
 .pago-option-head{display:flex; align-items:center; gap:10px; font-weight:600;}
 .pago-option-head input{accent-color:var(--wine); width:16px; height:16px;}
 
+/* ---------- Buscador de zona de entrega ---------- */
+.zona-box{
+  background:var(--wine-dark); border-radius:16px; padding:20px; margin-bottom:16px; color:#fff;
+}
+.zona-header{font-weight:700; font-size:1rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+.zona-input{
+  width:100%; padding:12px 14px; border-radius:10px; border:none; font-family:inherit; font-size:.92rem;
+  margin-bottom:2px;
+}
+.zona-results{max-height:240px; overflow-y:auto; margin-top:10px;}
+.zona-item{
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(255,255,255,.08); border-radius:8px; padding:10px 12px; margin-bottom:6px; font-size:.88rem;
+}
+.zona-price{font-weight:700; color:#f0d98a;}
+.zona-empty{font-size:.85rem; opacity:.85; padding:8px 2px;}
+
 /* ---------- Formularios y tarjetas reutilizables ---------- */
 .panel-card{
   background:#fff; border:1px solid var(--line); border-radius:16px; padding:26px;

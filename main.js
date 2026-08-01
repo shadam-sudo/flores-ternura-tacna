@@ -309,6 +309,12 @@ function renderProductPage(){
           <span>💬 Coordinamos por WhatsApp</span>
         </div>
 
+        <div class="zona-box">
+          <div class="zona-header">🚚 ¿Cuánto cuesta el envío a tu distrito?</div>
+          <input type="text" id="zona-search" class="zona-input" placeholder="Escribe tu distrito: Pocollay, Cercado, Alto de la Alianza..." oninput="filtrarZonas()" onfocus="filtrarZonas()">
+          <div id="zona-results" class="zona-results"></div>
+        </div>
+
         <div class="panel-card">
           <div class="field">
             <label>Tu dedicatoria (opcional) — va en una tarjeta con tu pedido</label>
@@ -347,6 +353,26 @@ function renderProductPage(){
         </div>
       </div>
     </div>`;
+}
+
+function filtrarZonas(){
+  const input = document.getElementById("zona-search");
+  const resultsEl = document.getElementById("zona-results");
+  if(!input || !resultsEl) return;
+  const query = input.value.trim().toLowerCase();
+  const zonas = SITE.zonasEnvio || [];
+  const filtradas = query ? zonas.filter(z => z.distrito.toLowerCase().includes(query)) : zonas;
+
+  if(!filtradas.length){
+    resultsEl.innerHTML = `<div class="zona-empty">No encontramos ese distrito. Escríbenos por WhatsApp y coordinamos.</div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = filtradas.map(z => `
+    <div class="zona-item">
+      <span>${z.distrito}</span>
+      <span class="zona-price">${z.precio > 0 ? "S/ " + z.precio.toFixed(2) : "Gratis"}</span>
+    </div>`).join("");
 }
 
 function setHorario(valor){
