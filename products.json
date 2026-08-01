@@ -2,7 +2,20 @@
   "site": {
     "nombre": "Flores & Ternura Tacna",
     "whatsapp": "51900000000",
-    "email": "contacto@floresyternuratacna.pe"
+    "email": "contacto@floresyternuratacna.pe",
+    "pagos": {
+      "yape": "982469862",
+      "yapeNombre": "SHADAM JESUS SERRANO RIVERA",
+      "plin": "",
+      "plinNombre": "",
+      "bcp": "",
+      "bcpCci": "",
+      "bcpTitular": "",
+      "bn": "",
+      "bnTitular": "",
+      "interbank": "",
+      "interbankTitular": ""
+    }
   },
   "products": [
     {
