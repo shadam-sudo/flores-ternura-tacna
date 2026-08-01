@@ -127,10 +127,19 @@ function renderCartPage(){
 
         <div class="field" style="margin-top:6px;">
           <label>Método de pago</label>
-          <select id="metodo-pago" onchange="renderMetodoPago()">
-            <option value="mp">Tarjeta (Mercado Pago)</option>
-            ${metodosAlt.length ? `<option value="alt">Yape / Plin / Transferencia</option>` : ""}
-          </select>
+          <div class="pago-option selected" id="opt-mp" onclick="selectMetodo('mp')">
+            <div class="pago-option-head">
+              <input type="radio" name="metodo-pago" value="mp" checked>
+              Tarjeta (Mercado Pago)
+            </div>
+          </div>
+          ${metodosAlt.length ? `
+          <div class="pago-option" id="opt-alt" onclick="selectMetodo('alt')">
+            <div class="pago-option-head">
+              <input type="radio" name="metodo-pago" value="alt">
+              Yape / Plin / Transferencia
+            </div>
+          </div>` : ""}
         </div>
 
         <div id="pago-mp-block">
@@ -151,14 +160,22 @@ function renderCartPage(){
   renderMetodoPago();
 }
 
+function selectMetodo(valor){
+  document.getElementById("opt-mp").classList.toggle("selected", valor === "mp");
+  document.getElementById("opt-mp").querySelector("input").checked = valor === "mp";
+  const optAlt = document.getElementById("opt-alt");
+  if(optAlt){
+    optAlt.classList.toggle("selected", valor === "alt");
+    optAlt.querySelector("input").checked = valor === "alt";
+  }
+  document.getElementById("pago-mp-block").style.display = valor === "alt" ? "none" : "block";
+  document.getElementById("pago-alt-block").style.display = valor === "alt" ? "block" : "none";
+  if(valor === "alt") renderMetodoPago();
+}
+
 function renderMetodoPago(){
-  const sel = document.getElementById("metodo-pago");
-  if(!sel) return;
-  const esAlt = sel.value === "alt";
-  document.getElementById("pago-mp-block").style.display = esAlt ? "none" : "block";
-  document.getElementById("pago-alt-block").style.display = esAlt ? "block" : "none";
-  if(esAlt){
     const list = document.getElementById("metodos-alt-list");
+    if(!list) return;
     list.innerHTML = (window._metodosAlt || []).map(m => `
       <div style="background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <b>${m.label}</b><br>
@@ -166,7 +183,6 @@ function renderMetodoPago(){
         ${m.cci ? `<br><span style="font-size:.8rem;color:#6b5f57;">CCI: ${m.cci}</span>` : ""}
         ${m.titular ? `<br><span style="font-size:.8rem;color:#6b5f57;">A nombre de: ${m.titular}</span>` : ""}
       </div>`).join("");
-  }
 }
 
 function confirmarPagoWhatsApp(){
@@ -313,6 +329,78 @@ function addProductFromPage(productId){
   const dedicatoria = document.getElementById("pd-dedicatoria").value.trim();
   const fecha = document.getElementById("pd-fecha").value;
   addToCart(productId, 1, { dedicatoria, fecha, horario: selectedHorario });
+  showAddedModal(productId);
+}
+
+// ---------- Modal "Añadido al carrito" con sugerencias cruzadas ----------
+function pickSuggestions(baseProductId){
+  const base = PRODUCTS.find(p => p.id === baseProductId);
+  if(!base) return [];
+  const otras = PRODUCTS.filter(p => p.id !== baseProductId && p.categoria !== base.categoria);
+  // prioriza chocolates y peluches como complemento de flores, y viceversa
+  const prioridad = ["chocolates", "peluches", "flores", "combos"];
+  otras.sort((a,b) => prioridad.indexOf(a.categoria) - prioridad.indexOf(b.categoria));
+  return otras.slice(0, 3);
+}
+
+function showAddedModal(productId){
+  const product = PRODUCTS.find(p => p.id === productId);
+  if(!product) return;
+  closeAddedModal();
+
+  const sugerencias = pickSuggestions(productId);
+
+  const overlay = document.createElement("div");
+  overlay.className = "cart-modal-overlay";
+  overlay.id = "cart-modal-overlay";
+  overlay.onclick = (e) => { if(e.target === overlay) closeAddedModal(); };
+
+  overlay.innerHTML = `
+    <div class="cart-modal">
+      <div class="cart-modal-head">✓ ¡Añadido a tu carrito!</div>
+      <div class="cart-modal-item">
+        <img src="${product.img}" alt="${product.nombre}">
+        <div>
+          <div style="font-weight:600;">${product.nombre}</div>
+          <div style="color:var(--wine);font-weight:700;">S/ ${product.precio.toFixed(2)}</div>
+        </div>
+      </div>
+
+      ${sugerencias.length ? `
+      <div class="cart-modal-suggest-title">Completa tu regalo</div>
+      <p style="font-size:.8rem;color:#6b5f57;margin:-6px 0 12px;">Se lo llevamos junto, sin costo de envío extra.</p>
+      <div class="cart-modal-suggest-grid" id="cart-modal-suggest-grid">
+        ${sugerencias.map(s => `
+          <div class="suggest-card" id="suggest-${s.id}">
+            <img src="${s.img}" alt="${s.nombre}">
+            <div class="suggest-name">${s.nombre}</div>
+            <div class="suggest-price">S/ ${s.precio.toFixed(2)}</div>
+            <button class="mini-btn" onclick="addSuggestion(${s.id})">+ Añadir</button>
+          </div>`).join("")}
+      </div>` : ""}
+
+      <div class="cart-modal-total">
+        <span>Subtotal</span>
+        <span id="cart-modal-subtotal">S/ ${cartTotal().toFixed(2)}</span>
+      </div>
+      <a class="pay-btn" style="display:block;text-align:center;text-decoration:none;" href="carrito.html">Ir a pagar</a>
+      <button class="cart-modal-continue" onclick="closeAddedModal()">Seguir comprando</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+function addSuggestion(productId){
+  addToCart(productId, 1, {});
+  const card = document.getElementById(`suggest-${productId}`);
+  if(card){ card.querySelector("button").textContent = "Añadido ✓"; card.querySelector("button").disabled = true; }
+  const subtotalEl = document.getElementById("cart-modal-subtotal");
+  if(subtotalEl) subtotalEl.textContent = "S/ " + cartTotal().toFixed(2);
+}
+
+function closeAddedModal(){
+  const el = document.getElementById("cart-modal-overlay");
+  if(el) el.remove();
 }
 
 // ---------- Aplica WhatsApp / correo cargados desde products.json ----------
