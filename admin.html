@@ -64,6 +64,25 @@
   </div>
 
   <div class="admin-card">
+    <h2>Redes sociales</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">Pega el link completo de cada red (ej: https://instagram.com/tu_negocio). Deja en blanco las que no uses.</p>
+    <div class="row2">
+      <div class="field">
+        <label>Instagram</label>
+        <input type="text" id="social-instagram" placeholder="https://instagram.com/...">
+      </div>
+      <div class="field">
+        <label>Facebook</label>
+        <input type="text" id="social-facebook" placeholder="https://facebook.com/...">
+      </div>
+    </div>
+    <div class="field">
+      <label>TikTok</label>
+      <input type="text" id="social-tiktok" placeholder="https://tiktok.com/@...">
+    </div>
+  </div>
+
+  <div class="admin-card">
     <h2>Zonas de entrega (Tacna) y precio de envío</h2>
     <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
       Pon el precio de envío para cada distrito de la provincia de Tacna. Deja en 0 si el envío es gratis a ese distrito.
@@ -248,6 +267,11 @@ async function loadState(){
   document.getElementById("promo-codigo").value = promo.codigo || "";
   document.getElementById("promo-porcentaje").value = promo.porcentaje || "";
 
+  const social = STATE.site.social || {};
+  document.getElementById("social-instagram").value = social.instagram || "";
+  document.getElementById("social-facebook").value = social.facebook || "";
+  document.getElementById("social-tiktok").value = social.tiktok || "";
+
   STATE.site.zonasEnvio = (STATE.site.zonasEnvio && STATE.site.zonasEnvio.length) ? STATE.site.zonasEnvio : JSON.parse(JSON.stringify(DEFAULT_ZONAS));
   const zonasBody = document.getElementById("zonas-table-body");
   zonasBody.innerHTML = STATE.site.zonasEnvio.map((z, idx) => `
@@ -405,6 +429,11 @@ function resetForm(){
 async function publishChanges(){
   STATE.site.whatsapp = document.getElementById("site-whatsapp").value.trim();
   STATE.site.email = document.getElementById("site-email").value.trim();
+  STATE.site.social = {
+    instagram: document.getElementById("social-instagram").value.trim(),
+    facebook: document.getElementById("social-facebook").value.trim(),
+    tiktok: document.getElementById("social-tiktok").value.trim()
+  };
   STATE.site.promo = {
     codigo: document.getElementById("promo-codigo").value.trim().toUpperCase(),
     porcentaje: parseFloat(document.getElementById("promo-porcentaje").value) || 0

@@ -16,55 +16,60 @@
       "interbank": "",
       "interbankTitular": ""
     },
-    "zonasEnvio": [
-      {
-        "distrito": "Tacna (Cercado)",
-        "precio": 10
-      },
-      {
-        "distrito": "Alto de la Alianza",
-        "precio": 15
-      },
-      {
-        "distrito": "Ciudad Nueva",
-        "precio": 15
-      },
-      {
-        "distrito": "Coronel Gregorio Albarracín Lanchipa",
-        "precio": 12
-      },
-      {
-        "distrito": "Pocollay",
-        "precio": 18
-      },
-      {
-        "distrito": "Calana",
-        "precio": 20
-      },
-      {
-        "distrito": "Pachía",
-        "precio": 20
-      },
-      {
-        "distrito": "Palca",
-        "precio": 30
-      },
-      {
-        "distrito": "Inclán",
-        "precio": 15
-      },
-      {
-        "distrito": "Sama (Las Yaras)",
-        "precio": 20
-      },
-      {
-        "distrito": "La Yarada - Los Palos",
-        "precio": 20
-      }
-    ],
     "promo": {
       "codigo": "",
       "porcentaje": 0
+    },
+    "zonasEnvio": [
+      {
+        "distrito": "Tacna (Cercado)",
+        "precio": 0
+      },
+      {
+        "distrito": "Alto de la Alianza",
+        "precio": 0
+      },
+      {
+        "distrito": "Ciudad Nueva",
+        "precio": 0
+      },
+      {
+        "distrito": "Coronel Gregorio Albarracín Lanchipa",
+        "precio": 0
+      },
+      {
+        "distrito": "Pocollay",
+        "precio": 0
+      },
+      {
+        "distrito": "Calana",
+        "precio": 0
+      },
+      {
+        "distrito": "Pachía",
+        "precio": 0
+      },
+      {
+        "distrito": "Palca",
+        "precio": 0
+      },
+      {
+        "distrito": "Inclán",
+        "precio": 0
+      },
+      {
+        "distrito": "Sama (Las Yaras)",
+        "precio": 0
+      },
+      {
+        "distrito": "La Yarada - Los Palos",
+        "precio": 0
+      }
+    ],
+    "social": {
+      "instagram": "",
+      "facebook": "",
+      "tiktok": ""
     }
   },
   "products": [

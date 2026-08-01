@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Envíos | Flores & Ternura Tacna</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a href="index.html" class="logo">Flores <span>&</span> Ternura <span>Tacna</span></a>
+  </div>
+</header>
+<div class="ribbon"></div>
+
+<main class="wrap" style="padding:40px 0 60px;max-width:760px;">
+  <h1>Política de Envíos</h1>
+  <div style="color:#544943;line-height:1.7;">
+    <h3>Cobertura</h3>
+    <p>Realizamos entregas únicamente dentro de la provincia de Tacna, Perú.</p>
+
+    <h3>Horarios de entrega</h3>
+    <p>Puedes elegir entre dos franjas horarias al momento de tu pedido: 9:00 a.m. – 1:00 p.m., o 1:00 p.m. – 6:00 p.m.</p>
+
+    <h3>Entrega el mismo día</h3>
+    <p>Si tu pedido se confirma antes de las 4:00 p.m., coordinamos la entrega para el mismo día según disponibilidad y distrito.</p>
+
+    <h3>Costo de envío por distrito</h3>
+    <p>El costo varía según tu distrito. Puedes verlo en la página de cada producto, o revisar la lista completa aquí:</p>
+    <div id="zonas-policy-list" class="zonas" style="margin-top:16px;"></div>
+
+    <h3 style="margin-top:24px;">Coordinación</h3>
+    <p>Una vez confirmado tu pedido, coordinamos los detalles finales de la entrega por WhatsApp.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div>
+      <h4 class="footer-brand">Flores & Ternura Tacna</h4>
+      <p>Tu florería de confianza con delivery en toda la provincia de Tacna, Perú.</p>
+      <div class="footer-social" id="footer-social"></div>
+    </div>
+    <div>
+      <h4>Servicio al cliente</h4>
+      <p><a href="terminos.html">Términos y condiciones</a></p>
+      <p><a href="libro-reclamaciones.html">Libro de reclamaciones</a></p>
+    </div>
+    <div>
+      <h4>Contáctanos</h4>
+      <p><a href="https://wa.me/51900000000" data-wa-link target="_blank" rel="noopener"><span class="wa-display">WhatsApp: 900 000 000</span></a></p>
+      <p><a href="mailto:contacto@floresyternuratacna.pe" class="email-link">contacto@floresyternuratacna.pe</a></p>
+    </div>
+  </div>
+  <p class="fine">© 2026 Flores & Ternura Tacna. Todos los derechos reservados.</p>
+</footer>
+
+<script src="taxonomy.js"></script>
+<script src="products.js"></script>
+<script src="cart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadCatalog();
+  applySiteConfig();
+  const zonas = (SITE.zonasEnvio && SITE.zonasEnvio.length) ? SITE.zonasEnvio : DEFAULT_ZONAS;
+  document.getElementById("zonas-policy-list").innerHTML = zonas.map(z => `
+    <div><b>${z.distrito}</b>${z.precio > 0 ? "S/ " + z.precio.toFixed(2) : "Gratis"} · ${z.tiempo === "2-4 horas" ? "2–4 horas" : "mismo día"}</div>`).join("");
+});
+</script>
+</body>
+</html>

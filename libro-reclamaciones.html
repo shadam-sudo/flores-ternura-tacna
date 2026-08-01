@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Libro de Reclamaciones | Flores & Ternura Tacna</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a href="index.html" class="logo">Flores <span>&</span> Ternura <span>Tacna</span></a>
+    <nav class="nav-links">
+      <a href="catalogo.html">Catálogo</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="carrito.html" class="cart-btn">Carrito <span class="cart-count">0</span></a>
+    </div>
+  </div>
+</header>
+<div class="ribbon"></div>
+
+<main class="wrap" style="padding:40px 0 60px;max-width:760px;">
+  <h1>Libro de Reclamaciones Virtual</h1>
+  <p style="color:#544943;">
+    Conforme al Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de
+    Reclamaciones a tu disposición. La formulación del reclamo no impide acudir a otras vías de solución de
+    controversias ni es requisito previo para interponer una denuncia ante INDECOPI.
+  </p>
+
+  <div id="reclamo-form-wrap" class="panel-card" style="margin-top:24px;">
+    <div class="field">
+      <label>Tipo</label>
+      <select id="rc-tipo">
+        <option value="reclamo">Reclamo (disconformidad con el producto)</option>
+        <option value="queja">Queja (disconformidad con la atención)</option>
+      </select>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Nombres y apellidos *</label><input type="text" id="rc-nombres"></div>
+      <div class="field"><label>DNI / CE</label><input type="text" id="rc-dni"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Teléfono</label><input type="text" id="rc-telefono"></div>
+      <div class="field"><label>Correo electrónico *</label><input type="text" id="rc-email"></div>
+    </div>
+    <div class="field"><label>Domicilio</label><input type="text" id="rc-domicilio"></div>
+    <div class="row2">
+      <div class="field"><label>Producto / pedido</label><input type="text" id="rc-bien" placeholder="Ej: Ramo de 12 Rosas Rojas"></div>
+      <div class="field"><label>Monto reclamado (S/)</label><input type="text" id="rc-monto"></div>
+    </div>
+    <div class="field">
+      <label>Detalle de la reclamación *</label>
+      <input type="text" id="rc-detalle" placeholder="Describe lo ocurrido">
+    </div>
+    <div class="field">
+      <label>¿Qué solicitas?</label>
+      <input type="text" id="rc-pedido" placeholder="Ej: cambio, devolución, reenvío">
+    </div>
+    <button class="pd-cta" onclick="enviarReclamo()">Enviar reclamo</button>
+    <p id="rc-msg" style="font-size:.85rem;margin-top:10px;"></p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div>
+      <h4 class="footer-brand">Flores & Ternura Tacna</h4>
+      <p>Tu florería de confianza con delivery en toda la provincia de Tacna, Perú.</p>
+      <div class="footer-social" id="footer-social"></div>
+    </div>
+    <div>
+      <h4>Servicio al cliente</h4>
+      <p><a href="politica-envios.html">Política de envíos</a></p>
+      <p><a href="terminos.html">Términos y condiciones</a></p>
+    </div>
+    <div>
+      <h4>Contáctanos</h4>
+      <p><a href="https://wa.me/51900000000" data-wa-link target="_blank" rel="noopener"><span class="wa-display">WhatsApp: 900 000 000</span></a></p>
+      <p><a href="mailto:contacto@floresyternuratacna.pe" class="email-link">contacto@floresyternuratacna.pe</a></p>
+    </div>
+  </div>
+  <p class="fine">© 2026 Flores & Ternura Tacna. Todos los derechos reservados.</p>
+</footer>
+
+<script src="taxonomy.js"></script>
+<script src="products.js"></script>
+<script src="cart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadCatalog();
+  applySiteConfig();
+});
+
+async function enviarReclamo(){
+  const nombres = document.getElementById("rc-nombres").value.trim();
+  const email = document.getElementById("rc-email").value.trim();
+  const detalle = document.getElementById("rc-detalle").value.trim();
+  const msgEl = document.getElementById("rc-msg");
+
+  if(!nombres || !email || !detalle){
+    msgEl.style.color = "#a12a2a";
+    msgEl.textContent = "Completa los campos obligatorios (*).";
+    return;
+  }
+
+  const data = {
+    tipo: document.getElementById("rc-tipo").value,
+    nombres, email, detalle,
+    dni: document.getElementById("rc-dni").value.trim(),
+    telefono: document.getElementById("rc-telefono").value.trim(),
+    domicilio: document.getElementById("rc-domicilio").value.trim(),
+    bienContratado: document.getElementById("rc-bien").value.trim(),
+    monto: document.getElementById("rc-monto").value.trim(),
+    pedido: document.getElementById("rc-pedido").value.trim()
+  };
+
+  msgEl.style.color = "#544943";
+  msgEl.textContent = "Enviando...";
+
+  try{
+    const res = await fetch("/api/reclamo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if(result.ok){
+      document.getElementById("reclamo-form-wrap").innerHTML = `
+        <h3>✓ Reclamo N° ${result.numero} registrado</h3>
+        <p style="color:#544943;">Hemos recibido tu ${data.tipo}. Te responderemos a <b>${email}</b> en un plazo máximo de 15 días hábiles, conforme a ley.</p>`;
+    } else {
+      msgEl.style.color = "#a12a2a";
+      msgEl.textContent = "Error: " + (result.error || "no se pudo registrar.");
+    }
+  } catch(e){
+    msgEl.style.color = "#a12a2a";
+    msgEl.textContent = "Error de conexión.";
+  }
+}
+</script>
+</body>
+</html>

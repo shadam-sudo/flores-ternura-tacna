@@ -29,12 +29,15 @@ let activeCategoria = "todas";
 let activeOcasion = "todas";
 
 function renderCatalogFilters(){
+  const catParam = new URLSearchParams(window.location.search).get("cat");
+  if(catParam && CATEGORIAS.some(c => c.key === catParam)) activeCategoria = catParam;
+
   const catWrap = document.getElementById("cat-filters");
   const ocWrap = document.getElementById("oc-filters");
   if(!catWrap || !ocWrap) return;
 
-  catWrap.innerHTML = ['<button class="chip active" data-cat="todas">Todas las categorías</button>']
-    .concat(CATEGORIAS.map(c => `<button class="chip" data-cat="${c.key}">${c.label}</button>`)).join("");
+  catWrap.innerHTML = [`<button class="chip ${activeCategoria === "todas" ? "active" : ""}" data-cat="todas">Todas las categorías</button>`]
+    .concat(CATEGORIAS.map(c => `<button class="chip ${activeCategoria === c.key ? "active" : ""}" data-cat="${c.key}">${c.label}</button>`)).join("");
 
   ocWrap.innerHTML = ['<button class="chip active" data-oc="todas">Todas las ocasiones</button>']
     .concat(OCASIONES.map(o => `<button class="chip" data-oc="${o.key}">${o.label}</button>`)).join("");
@@ -527,6 +530,43 @@ function applySiteConfig(){
   document.querySelectorAll(".email-link").forEach(el => {
     if(SITE.email){ el.href = "mailto:" + SITE.email; el.textContent = SITE.email; }
   });
+  renderFooterSocial();
+}
+
+function renderFooterSocial(){
+  const el = document.getElementById("footer-social");
+  if(!el) return;
+  const social = SITE.social || {};
+  const iconos = [];
+  if(social.instagram) iconos.push(`<a href="${social.instagram}" target="_blank" rel="noopener" aria-label="Instagram">📷</a>`);
+  if(social.facebook) iconos.push(`<a href="${social.facebook}" target="_blank" rel="noopener" aria-label="Facebook">📘</a>`);
+  if(social.tiktok) iconos.push(`<a href="${social.tiktok}" target="_blank" rel="noopener" aria-label="TikTok">🎵</a>`);
+  el.innerHTML = iconos.join("");
+}
+
+async function suscribirNewsletter(e){
+  e.preventDefault();
+  const email = document.getElementById("newsletter-email").value.trim();
+  const msgEl = document.getElementById("newsletter-msg");
+  if(!email) return false;
+  msgEl.textContent = "Enviando...";
+  try{
+    const res = await fetch("/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if(data.ok){
+      msgEl.textContent = "✓ ¡Gracias por suscribirte!";
+      document.getElementById("newsletter-email").value = "";
+    } else {
+      msgEl.textContent = "No se pudo suscribir, intenta de nuevo.";
+    }
+  } catch(err){
+    msgEl.textContent = "Error de conexión.";
+  }
+  return false;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
