@@ -558,7 +558,12 @@ async function suscribirNewsletter(e){
     });
     const data = await res.json();
     if(data.ok){
-      msgEl.textContent = "✓ ¡Gracias por suscribirte!";
+      const promo = SITE.promo || {};
+      if(promo.codigo && promo.porcentaje > 0){
+        msgEl.textContent = `✓ ¡Gracias por suscribirte! Tu código: ${promo.codigo} (-${promo.porcentaje}%). Úsalo en tu carrito.`;
+      } else {
+        msgEl.textContent = "✓ ¡Gracias por suscribirte!";
+      }
       document.getElementById("newsletter-email").value = "";
     } else {
       msgEl.textContent = "No se pudo suscribir, intenta de nuevo.";
