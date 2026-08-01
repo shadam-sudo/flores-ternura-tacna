@@ -1,8 +1,9 @@
 // ---------- Render de tarjeta de producto ----------
 function productCardHTML(p){
+  const imgs = (p.imagenes && p.imagenes.length) ? p.imagenes : [p.img || "ph-flor.svg"];
   return `
     <div class="prod-card">
-      <a href="producto.html?id=${p.id}" class="prod-img"><img src="${p.img}" alt="${p.nombre}" loading="lazy"></a>
+      <a href="producto.html?id=${p.id}" class="prod-img" data-imgs='${JSON.stringify(imgs)}'><img src="${imgs[0]}" alt="${p.nombre}" loading="lazy"></a>
       <div class="prod-body">
         <div class="prod-tags">
           <span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span>
@@ -16,12 +17,35 @@ function productCardHTML(p){
     </div>`;
 }
 
+function attachHoverCycle(container){
+  if(!container) return;
+  container.querySelectorAll(".prod-img[data-imgs]").forEach(el => {
+    let imgs;
+    try{ imgs = JSON.parse(el.dataset.imgs); } catch(e){ return; }
+    if(!imgs || imgs.length <= 1) return;
+    const imgEl = el.querySelector("img");
+    let idx = 0, timer = null;
+    el.addEventListener("mouseenter", () => {
+      timer = setInterval(() => {
+        idx = (idx + 1) % imgs.length;
+        imgEl.src = imgs[idx];
+      }, 900);
+    });
+    el.addEventListener("mouseleave", () => {
+      clearInterval(timer);
+      idx = 0;
+      imgEl.src = imgs[0];
+    });
+  });
+}
+
 // ---------- Home: destacados ----------
 function renderFeatured(){
   const el = document.getElementById("featured-grid");
   if(!el) return;
   const featured = PRODUCTS.slice(0, 8);
   el.innerHTML = featured.map(productCardHTML).join("");
+  attachHoverCycle(el);
 }
 
 // ---------- Catálogo con filtros ----------
@@ -69,6 +93,7 @@ function renderCatalogGrid(){
   grid.innerHTML = list.length
     ? list.map(productCardHTML).join("")
     : `<p style="grid-column:1/-1;text-align:center;color:#6b5f57;padding:40px 0;">No hay productos con esos filtros. Prueba con otro.</p>`;
+  attachHoverCycle(grid);
 }
 
 // ---------- Carrito: página ----------
@@ -320,10 +345,17 @@ function renderProductPage(){
   }
 
   document.title = `${p.nombre} | ${SITE.nombre || "Flores & Ternura Tacna"}`;
+  const imgs = (p.imagenes && p.imagenes.length) ? p.imagenes : [p.img || "ph-flor.svg"];
 
   container.innerHTML = `
     <div class="pd-layout">
-      <div class="pd-image"><img src="${p.img}" alt="${p.nombre}"></div>
+      <div>
+        <div class="pd-image"><img src="${imgs[0]}" alt="${p.nombre}" id="pd-main-img"></div>
+        ${imgs.length > 1 ? `
+        <div class="pd-thumbs">
+          ${imgs.map((im, i) => `<button class="pd-thumb ${i===0 ? "active" : ""}" onclick="cambiarFotoProducto('${im}', this)"><img src="${im}" alt=""></button>`).join("")}
+        </div>` : ""}
+      </div>
       <div>
         <div class="prod-tags"><span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span></div>
         <h1 style="margin-top:10px;">${p.nombre}</h1>
@@ -416,6 +448,12 @@ function filtrarZonas(){
       <span>${seleccionada && seleccionada.distrito === z.distrito ? "✓ " : ""}${z.distrito}</span>
       <span class="zona-price">${z.precio > 0 ? "S/ " + z.precio.toFixed(2) : "Gratis"}</span>
     </div>`).join("");
+}
+
+function cambiarFotoProducto(src, btn){
+  document.getElementById("pd-main-img").src = src;
+  document.querySelectorAll(".pd-thumb").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
 }
 
 function setHorario(valor){

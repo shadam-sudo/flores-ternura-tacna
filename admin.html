@@ -188,11 +188,24 @@
         <label>Categoría</label>
         <select id="p-categoria"></select>
       </div>
-      <div class="field">
-        <label>Foto del producto</label>
-        <input type="file" id="p-img-file" accept="image/*" onchange="uploadImage()">
-        <div id="p-img-status" style="font-size:.8rem;color:#6b5f57;margin-top:4px;"></div>
+    </div>
+    <div class="field">
+      <label>Fotos del producto (hasta 3, opcionales — la primera se usa como principal)</label>
+      <div class="pd-thumbs" style="margin-bottom:8px;">
+        <div>
+          <input type="file" id="p-img-file-0" accept="image/*" onchange="uploadImageSlot(0)" style="width:120px;">
+          <img id="p-img-preview-0" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;margin-top:6px;">
+        </div>
+        <div>
+          <input type="file" id="p-img-file-1" accept="image/*" onchange="uploadImageSlot(1)" style="width:120px;">
+          <img id="p-img-preview-1" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;margin-top:6px;">
+        </div>
+        <div>
+          <input type="file" id="p-img-file-2" accept="image/*" onchange="uploadImageSlot(2)" style="width:120px;">
+          <img id="p-img-preview-2" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;margin-top:6px;">
+        </div>
       </div>
+      <div id="p-img-status" style="font-size:.8rem;color:#6b5f57;"></div>
     </div>
     <div class="field">
       <label>Ocasiones</label>
@@ -315,7 +328,7 @@ function renderTable(){
   document.getElementById("prod-count").textContent = STATE.products.length;
   body.innerHTML = STATE.products.map(p => `
     <tr>
-      <td><img class="thumb" src="${p.img}" alt=""></td>
+      <td><img class="thumb" src="${(p.imagenes && p.imagenes[0]) || p.img || 'ph-flor.svg'}" alt=""></td>
       <td>${p.nombre}</td>
       <td>${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</td>
       <td>S/ ${Number(p.precio).toFixed(2)}</td>
@@ -326,13 +339,14 @@ function renderTable(){
     </tr>`).join("");
 }
 
-let pendingImg = null;
+let pendingImgs = [null, null, null];   // nuevas subidas en esta sesión (por slot)
+let existingImgs = [null, null, null];  // fotos que ya tenía el producto al editar
 
-async function uploadImage(){
-  const file = document.getElementById("p-img-file").files[0];
+async function uploadImageSlot(slot){
+  const file = document.getElementById(`p-img-file-${slot}`).files[0];
   if(!file) return;
   const statusEl = document.getElementById("p-img-status");
-  statusEl.textContent = "Subiendo imagen...";
+  statusEl.textContent = `Subiendo foto ${slot + 1}...`;
   const base64 = await fileToBase64(file);
   try{
     const res = await fetch("/api/admin-upload-image", {
@@ -341,8 +355,11 @@ async function uploadImage(){
     });
     const data = await res.json();
     if(data.ok){
-      pendingImg = data.url;
-      statusEl.textContent = "Imagen lista ✓";
+      pendingImgs[slot] = data.url;
+      const preview = document.getElementById(`p-img-preview-${slot}`);
+      preview.src = data.url;
+      preview.style.display = "block";
+      statusEl.textContent = `Foto ${slot + 1} lista ✓`;
     } else {
       statusEl.textContent = "Error: " + (data.error || "no se pudo subir");
     }
@@ -373,15 +390,21 @@ function saveProductForm(){
     return;
   }
 
+  // combina, por cada slot (0,1,2), la foto recién subida o la que ya tenía
+  const imagenes = [0,1,2]
+    .map(i => pendingImgs[i] || existingImgs[i])
+    .filter(Boolean);
+
   if(editingId){
     const p = STATE.products.find(x => x.id === editingId);
     p.nombre = nombre; p.precio = precio; p.categoria = categoria; p.desc = desc; p.incluye = incluye; p.ocasiones = ocasiones;
-    if(pendingImg) p.img = pendingImg;
+    if(imagenes.length) { p.imagenes = imagenes; p.img = imagenes[0]; }
   } else {
     const nextId = STATE.products.length ? Math.max(...STATE.products.map(p=>p.id)) + 1 : 1;
     STATE.products.push({
       id: nextId, nombre, precio, categoria, desc, incluye, ocasiones,
-      img: pendingImg || "ph-flor.svg"
+      imagenes: imagenes.length ? imagenes : ["ph-flor.svg"],
+      img: imagenes[0] || "ph-flor.svg"
     });
   }
   resetForm();
@@ -392,7 +415,9 @@ function editProduct(id){
   const p = STATE.products.find(x => x.id === id);
   if(!p) return;
   editingId = id;
-  pendingImg = null;
+  pendingImgs = [null, null, null];
+  const fotos = (p.imagenes && p.imagenes.length) ? p.imagenes : (p.img ? [p.img] : []);
+  existingImgs = [fotos[0] || null, fotos[1] || null, fotos[2] || null];
   document.getElementById("form-title").textContent = "Editar producto";
   document.getElementById("p-nombre").value = p.nombre;
   document.getElementById("p-precio").value = p.precio;
@@ -401,6 +426,12 @@ function editProduct(id){
   document.getElementById("p-incluye").value = p.incluye || "";
   document.querySelectorAll("#p-ocasiones input").forEach(el => {
     el.checked = p.ocasiones.includes(el.value);
+  });
+  [0,1,2].forEach(i => {
+    const preview = document.getElementById(`p-img-preview-${i}`);
+    if(existingImgs[i]){ preview.src = existingImgs[i]; preview.style.display = "block"; }
+    else { preview.src = ""; preview.style.display = "none"; }
+    document.getElementById(`p-img-file-${i}`).value = "";
   });
   document.getElementById("save-product-btn").textContent = "Guardar cambios";
   document.getElementById("cancel-edit-btn").style.display = "inline-block";
@@ -415,14 +446,20 @@ function deleteProduct(id){
 
 function resetForm(){
   editingId = null;
-  pendingImg = null;
+  pendingImgs = [null, null, null];
+  existingImgs = [null, null, null];
   document.getElementById("form-title").textContent = "Agregar producto";
   document.getElementById("p-nombre").value = "";
   document.getElementById("p-precio").value = "";
   document.getElementById("p-desc").value = "";
   document.getElementById("p-incluye").value = "";
   document.getElementById("p-img-status").textContent = "";
-  document.getElementById("p-img-file").value = "";
+  [0,1,2].forEach(i => {
+    document.getElementById(`p-img-file-${i}`).value = "";
+    const preview = document.getElementById(`p-img-preview-${i}`);
+    preview.src = "";
+    preview.style.display = "none";
+  });
   document.querySelectorAll("#p-ocasiones input").forEach(el => el.checked = false);
   document.getElementById("save-product-btn").textContent = "Agregar a la lista";
   document.getElementById("cancel-edit-btn").style.display = "none";
