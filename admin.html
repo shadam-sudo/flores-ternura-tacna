@@ -64,6 +64,67 @@
   </div>
 
   <div class="admin-card">
+    <h2>Métodos de pago</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
+      Deja en blanco los que no uses — solo se muestran a tus clientes los que completes. Mercado Pago sigue funcionando aparte, con tarjeta.
+    </p>
+    <div class="row2">
+      <div class="field">
+        <label>Número de Yape</label>
+        <input type="text" id="pay-yape" placeholder="987 654 321">
+      </div>
+      <div class="field">
+        <label>Nombre en Yape</label>
+        <input type="text" id="pay-yape-nombre" placeholder="Nombre y apellido">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Número de Plin</label>
+        <input type="text" id="pay-plin" placeholder="987 654 321">
+      </div>
+      <div class="field">
+        <label>Nombre en Plin</label>
+        <input type="text" id="pay-plin-nombre" placeholder="Nombre y apellido">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Cuenta BCP</label>
+        <input type="text" id="pay-bcp" placeholder="Número de cuenta">
+      </div>
+      <div class="field">
+        <label>CCI BCP</label>
+        <input type="text" id="pay-bcp-cci" placeholder="Código de cuenta interbancario">
+      </div>
+    </div>
+    <div class="field">
+      <label>Titular cuenta BCP</label>
+      <input type="text" id="pay-bcp-titular" placeholder="Nombre y apellido">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Cuenta Banco de la Nación</label>
+        <input type="text" id="pay-bn" placeholder="Número de cuenta">
+      </div>
+      <div class="field">
+        <label>Titular Banco de la Nación</label>
+        <input type="text" id="pay-bn-titular" placeholder="Nombre y apellido">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Cuenta Interbank</label>
+        <input type="text" id="pay-interbank" placeholder="Número de cuenta">
+      </div>
+      <div class="field">
+        <label>Titular Interbank</label>
+        <input type="text" id="pay-interbank-titular" placeholder="Nombre y apellido">
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
     <h2 id="form-title">Agregar producto</h2>
     <div class="row2">
       <div class="field">
@@ -148,6 +209,19 @@ async function loadState(){
   STATE = { site: data.site || {}, products: data.products || [] };
   document.getElementById("site-whatsapp").value = STATE.site.whatsapp || "";
   document.getElementById("site-email").value = STATE.site.email || "";
+
+  const pagos = STATE.site.pagos || {};
+  document.getElementById("pay-yape").value = pagos.yape || "";
+  document.getElementById("pay-yape-nombre").value = pagos.yapeNombre || "";
+  document.getElementById("pay-plin").value = pagos.plin || "";
+  document.getElementById("pay-plin-nombre").value = pagos.plinNombre || "";
+  document.getElementById("pay-bcp").value = pagos.bcp || "";
+  document.getElementById("pay-bcp-cci").value = pagos.bcpCci || "";
+  document.getElementById("pay-bcp-titular").value = pagos.bcpTitular || "";
+  document.getElementById("pay-bn").value = pagos.bn || "";
+  document.getElementById("pay-bn-titular").value = pagos.bnTitular || "";
+  document.getElementById("pay-interbank").value = pagos.interbank || "";
+  document.getElementById("pay-interbank-titular").value = pagos.interbankTitular || "";
 
   const catSel = document.getElementById("p-categoria");
   catSel.innerHTML = CATEGORIAS.map(c => `<option value="${c.key}">${c.label}</option>`).join("");
@@ -279,6 +353,19 @@ function resetForm(){
 async function publishChanges(){
   STATE.site.whatsapp = document.getElementById("site-whatsapp").value.trim();
   STATE.site.email = document.getElementById("site-email").value.trim();
+  STATE.site.pagos = {
+    yape: document.getElementById("pay-yape").value.trim(),
+    yapeNombre: document.getElementById("pay-yape-nombre").value.trim(),
+    plin: document.getElementById("pay-plin").value.trim(),
+    plinNombre: document.getElementById("pay-plin-nombre").value.trim(),
+    bcp: document.getElementById("pay-bcp").value.trim(),
+    bcpCci: document.getElementById("pay-bcp-cci").value.trim(),
+    bcpTitular: document.getElementById("pay-bcp-titular").value.trim(),
+    bn: document.getElementById("pay-bn").value.trim(),
+    bnTitular: document.getElementById("pay-bn-titular").value.trim(),
+    interbank: document.getElementById("pay-interbank").value.trim(),
+    interbankTitular: document.getElementById("pay-interbank-titular").value.trim()
+  };
 
   const statusEl = document.getElementById("status-msg");
   statusEl.className = ""; statusEl.style.display = "none";

@@ -109,6 +109,13 @@ function renderCartPage(){
   }).join("");
 
   const total = cartTotal();
+  const pagos = SITE.pagos || {};
+  const metodosAlt = [];
+  if(pagos.yape) metodosAlt.push({ id:"yape", label:"Yape", num: pagos.yape, titular: pagos.yapeNombre });
+  if(pagos.plin) metodosAlt.push({ id:"plin", label:"Plin", num: pagos.plin, titular: pagos.plinNombre });
+  if(pagos.bcp) metodosAlt.push({ id:"bcp", label:"BCP", num: pagos.bcp, cci: pagos.bcpCci, titular: pagos.bcpTitular });
+  if(pagos.bn) metodosAlt.push({ id:"bn", label:"Banco de la Nación", num: pagos.bn, titular: pagos.bnTitular });
+  if(pagos.interbank) metodosAlt.push({ id:"interbank", label:"Interbank", num: pagos.interbank, titular: pagos.interbankTitular });
 
   container.innerHTML = `
     <div class="cart-layout">
@@ -117,10 +124,59 @@ function renderCartPage(){
         <h3>Resumen del pedido</h3>
         <div style="font-size:.9rem;color:#6b5f57;">Envío: se coordina por WhatsApp según distrito de Tacna.</div>
         <div class="total-row"><span>Total</span><span>S/ ${total.toFixed(2)}</span></div>
-        <button class="pay-btn" id="pay-btn" onclick="pagarConMercadoPago()">Pagar con Mercado Pago</button>
-        <p style="font-size:.78rem;color:#9c8f86;margin-top:10px;">Pago procesado de forma segura por Mercado Pago. Aceptamos tarjetas y Yape.</p>
+
+        <div class="field" style="margin-top:6px;">
+          <label>Método de pago</label>
+          <select id="metodo-pago" onchange="renderMetodoPago()">
+            <option value="mp">Tarjeta (Mercado Pago)</option>
+            ${metodosAlt.length ? `<option value="alt">Yape / Plin / Transferencia</option>` : ""}
+          </select>
+        </div>
+
+        <div id="pago-mp-block">
+          <button class="pay-btn" id="pay-btn" onclick="pagarConMercadoPago()">Pagar con Mercado Pago</button>
+          <p style="font-size:.78rem;color:#9c8f86;margin-top:10px;">Pago procesado de forma segura por Mercado Pago. Aceptamos tarjetas.</p>
+        </div>
+
+        <div id="pago-alt-block" style="display:none;">
+          <div id="metodos-alt-list"></div>
+          <button class="pay-btn" onclick="confirmarPagoWhatsApp()">Ya pagué, confirmar por WhatsApp</button>
+          <p style="font-size:.78rem;color:#9c8f86;margin-top:10px;">Realiza el pago a los datos de arriba y envíanos la captura por WhatsApp para confirmar tu pedido.</p>
+        </div>
       </div>
     </div>`;
+
+  window._metodosAlt = metodosAlt;
+  window._cartTotal = total;
+  renderMetodoPago();
+}
+
+function renderMetodoPago(){
+  const sel = document.getElementById("metodo-pago");
+  if(!sel) return;
+  const esAlt = sel.value === "alt";
+  document.getElementById("pago-mp-block").style.display = esAlt ? "none" : "block";
+  document.getElementById("pago-alt-block").style.display = esAlt ? "block" : "none";
+  if(esAlt){
+    const list = document.getElementById("metodos-alt-list");
+    list.innerHTML = (window._metodosAlt || []).map(m => `
+      <div style="background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <b>${m.label}</b><br>
+        <span style="font-family:monospace;font-size:1rem;">${m.num}</span>
+        ${m.cci ? `<br><span style="font-size:.8rem;color:#6b5f57;">CCI: ${m.cci}</span>` : ""}
+        ${m.titular ? `<br><span style="font-size:.8rem;color:#6b5f57;">A nombre de: ${m.titular}</span>` : ""}
+      </div>`).join("");
+  }
+}
+
+function confirmarPagoWhatsApp(){
+  const cart = getCart();
+  const total = window._cartTotal || cartTotal();
+  const resumen = cart.map(i => `- ${i.nombre} x${i.qty}`).join("%0A");
+  const msg = `Hola! Acabo de realizar el pago de mi pedido (S/ ${total.toFixed(2)}):%0A${resumen}%0A%0AAdjunto la captura del pago.`;
+  window.open(`https://wa.me/${SITE.whatsapp}?text=${msg}`, "_blank");
+  localStorage.removeItem("flt_cart");
+  window.location.href = "gracias.html";
 }
 
 // ---------- Checkout: Mercado Pago ----------
