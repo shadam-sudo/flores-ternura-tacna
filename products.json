@@ -1,69 +1,74 @@
 {
   "site": {
     "nombre": "Flores & Ternura Tacna",
-    "whatsapp": "51900000000",
-    "email": "contacto@floresyternuratacna.pe",
+    "whatsapp": "51982469862",
+    "email": "ternura@floresyternuratacna.pe",
     "pagos": {
-      "yape": "",
-      "yapeNombre": "",
+      "yape": "982469862",
+      "yapeNombre": "shadam serrano",
       "plin": "",
       "plinNombre": "",
-      "bcp": "",
-      "bcpCci": "",
-      "bcpTitular": "",
+      "bcp": "49592447623014",
+      "bcpCci": "00249519244762301409",
+      "bcpTitular": "shadam jesus serrano rivera",
       "bn": "",
       "bnTitular": "",
       "interbank": "",
       "interbankTitular": ""
     },
     "promo": {
-      "codigo": "",
+      "codigo": "1212",
       "porcentaje": 0
     },
     "zonasEnvio": [
       {
         "distrito": "Tacna (Cercado)",
-        "precio": 0
+        "precio": 10,
+        "tiempo": "2-4 horas"
       },
       {
         "distrito": "Alto de la Alianza",
-        "precio": 0
+        "precio": 15,
+        "tiempo": "2-4 horas"
       },
       {
         "distrito": "Ciudad Nueva",
-        "precio": 0
+        "precio": 15,
+        "tiempo": "2-4 horas"
       },
       {
         "distrito": "Coronel Gregorio Albarracín Lanchipa",
-        "precio": 0
+        "precio": 12,
+        "tiempo": "2-4 horas"
       },
       {
         "distrito": "Pocollay",
-        "precio": 0
+        "precio": 15,
+        "tiempo": "2-4 horas"
       },
       {
         "distrito": "Calana",
-        "precio": 0
+        "precio": 20
       },
       {
         "distrito": "Pachía",
-        "precio": 0
+        "precio": 20
       },
       {
         "distrito": "Palca",
-        "precio": 0
+        "precio": 25
       },
       {
         "distrito": "Inclán",
-        "precio": 0
+        "precio": 25
       },
       {
         "distrito": "Sama (Las Yaras)",
-        "precio": 0
+        "precio": 25
       },
       {
         "distrito": "La Yarada - Los Palos",
-        "precio": 0
+        "precio": 25
       }
     ],
     "social": {
