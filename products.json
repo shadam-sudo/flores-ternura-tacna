@@ -123,9 +123,13 @@
         "graduacion"
       ],
       "precio": 69,
-      "img": "ph-flor.svg",
+      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785565440998-Reemplazarlogoeneldiseo2.png",
       "desc": "6 girasoles frescos con follaje verde, ideal para alegrar el día.",
-      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional)."
+      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional).",
+      "imagenes": [
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785565440998-Reemplazarlogoeneldiseo2.png",
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785565638359-Reemplazarlogoeneldiseo3.png"
+      ]
     },
     {
       "id": 4,
