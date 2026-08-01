@@ -11,32 +11,49 @@ function saveCart(cart){
   updateCartCount();
 }
 
-function addToCart(productId, qty = 1){
+function addToCart(productId, qty = 1, opciones = {}){
   const product = PRODUCTS.find(p => p.id === productId);
   if(!product) return;
   const cart = getCart();
-  const existing = cart.find(i => i.id === productId);
-  if(existing){ existing.qty += qty; }
-  else { cart.push({ id: product.id, nombre: product.nombre, precio: product.precio, img: product.img, qty }); }
+
+  // Si trae dedicatoria/fecha/horario, se agrega como línea nueva (no se combina con otras)
+  const tieneOpciones = opciones.dedicatoria || opciones.fecha || opciones.horario;
+  const existing = !tieneOpciones ? cart.find(i => i.id === productId && !i.dedicatoria && !i.fecha) : null;
+
+  if(existing){
+    existing.qty += qty;
+  } else {
+    cart.push({
+      id: product.id,
+      nombre: product.nombre,
+      precio: product.precio,
+      img: product.img,
+      qty,
+      dedicatoria: opciones.dedicatoria || "",
+      fecha: opciones.fecha || "",
+      horario: opciones.horario || "",
+      cartItemId: Date.now() + Math.random().toString(36).slice(2,7)
+    });
+  }
   saveCart(cart);
   showToast(`${product.nombre} agregado al carrito`);
 }
 
-function updateQty(productId, delta){
+function updateQty(cartItemId, delta){
   const cart = getCart();
-  const item = cart.find(i => i.id === productId);
+  const item = cart.find(i => (i.cartItemId || i.id) === cartItemId);
   if(!item) return;
   item.qty += delta;
   if(item.qty <= 0){
-    saveCart(cart.filter(i => i.id !== productId));
+    saveCart(cart.filter(i => (i.cartItemId || i.id) !== cartItemId));
   } else {
     saveCart(cart);
   }
   if(document.getElementById("cart-page")) renderCartPage();
 }
 
-function removeFromCart(productId){
-  saveCart(getCart().filter(i => i.id !== productId));
+function removeFromCart(cartItemId){
+  saveCart(getCart().filter(i => (i.cartItemId || i.id) !== cartItemId));
   if(document.getElementById("cart-page")) renderCartPage();
 }
 

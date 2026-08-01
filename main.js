@@ -1,17 +1,16 @@
 // ---------- Render de tarjeta de producto ----------
 function productCardHTML(p){
-  const ocasionLabel = (p.ocasiones[0] || "");
   return `
     <div class="prod-card">
-      <div class="prod-img"><img src="${p.img}" alt="${p.nombre}" loading="lazy"></div>
+      <a href="producto.html?id=${p.id}" class="prod-img"><img src="${p.img}" alt="${p.nombre}" loading="lazy"></a>
       <div class="prod-body">
         <div class="prod-tags">
           <span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span>
         </div>
-        <h3>${p.nombre}</h3>
+        <h3><a href="producto.html?id=${p.id}" style="color:inherit;">${p.nombre}</a></h3>
         <div class="price">S/ ${p.precio.toFixed(2)}</div>
         <div class="prod-actions">
-          <button class="btn-add" onclick="addToCart(${p.id})">Agregar</button>
+          <a href="producto.html?id=${p.id}" class="btn-add" style="text-align:center;text-decoration:none;">Ver y personalizar</a>
         </div>
       </div>
     </div>`;
@@ -85,21 +84,29 @@ function renderCartPage(){
     return;
   }
 
-  const itemsHTML = cart.map(i => `
+  const itemsHTML = cart.map(i => {
+    const cid = i.cartItemId || i.id;
+    const detalles = [];
+    if(i.fecha) detalles.push(`📅 ${i.fecha}`);
+    if(i.horario) detalles.push(`🕐 ${i.horario === "9am-1pm" ? "9am – 1pm" : "1pm – 6pm"}`);
+    if(i.dedicatoria) detalles.push(`💌 "${i.dedicatoria}"`);
+    return `
     <div class="cart-item">
       <img src="${i.img}" alt="${i.nombre}">
       <div>
         <div style="font-weight:600;">${i.nombre}</div>
         <div style="color:#6b5f57;font-size:.9rem;">S/ ${i.precio.toFixed(2)} c/u</div>
+        ${detalles.length ? `<div style="font-size:.8rem;color:var(--sage);margin-top:2px;">${detalles.join(" · ")}</div>` : ""}
         <div class="qty">
-          <button onclick="updateQty(${i.id},-1)">−</button>
+          <button onclick="updateQty('${cid}',-1)">−</button>
           <span>${i.qty}</span>
-          <button onclick="updateQty(${i.id},1)">+</button>
-          <button class="remove-link" onclick="removeFromCart(${i.id})">Eliminar</button>
+          <button onclick="updateQty('${cid}',1)">+</button>
+          <button class="remove-link" onclick="removeFromCart('${cid}')">Eliminar</button>
         </div>
       </div>
       <div style="font-weight:700;color:var(--wine);">S/ ${(i.precio*i.qty).toFixed(2)}</div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   const total = cartTotal();
 
@@ -128,7 +135,11 @@ async function pagarConMercadoPago(){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        items: cart.map(i => ({ title: i.nombre, qty: i.qty, price: i.precio }))
+        items: cart.map(i => {
+          let title = i.nombre;
+          if(i.fecha) title += ` (Entrega: ${i.fecha}, ${i.horario === "9am-1pm" ? "9am-1pm" : "1pm-6pm"})`;
+          return { title, qty: i.qty, price: i.precio };
+        })
       })
     });
     if(!res.ok) throw new Error("Error al crear la preferencia de pago");
@@ -143,6 +154,105 @@ async function pagarConMercadoPago(){
     btn.disabled = false;
     btn.textContent = "Pagar con Mercado Pago";
   }
+}
+
+// ---------- Página de producto individual ----------
+function getQueryId(){
+  const params = new URLSearchParams(window.location.search);
+  return parseInt(params.get("id"), 10);
+}
+
+function minDeliveryDate(){
+  const d = new Date();
+  d.setDate(d.getDate() + 1); // entrega mínima: mañana
+  return d.toISOString().split("T")[0];
+}
+
+let selectedHorario = "9am-1pm";
+
+function renderProductPage(){
+  const container = document.getElementById("product-page");
+  if(!container) return;
+
+  const id = getQueryId();
+  const p = PRODUCTS.find(x => x.id === id);
+
+  if(!p){
+    container.innerHTML = `<div class="empty-cart"><h2>Producto no encontrado</h2><a class="btn btn-primary" href="catalogo.html">Volver al catálogo</a></div>`;
+    return;
+  }
+
+  document.title = `${p.nombre} | ${SITE.nombre || "Flores & Ternura Tacna"}`;
+
+  container.innerHTML = `
+    <div class="cart-layout">
+      <div class="prod-img" style="border-radius:14px;overflow:hidden;">
+        <img src="${p.img}" alt="${p.nombre}" style="width:100%;">
+      </div>
+      <div>
+        <div class="prod-tags"><span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span></div>
+        <h1 style="margin-top:8px;">${p.nombre}</h1>
+        <div class="price" style="font-size:1.6rem;">S/ ${p.precio.toFixed(2)}</div>
+        <p style="color:#544943;margin:14px 0;">${p.desc || ""}</p>
+
+        <div class="admin-card" style="padding:18px;">
+          <div class="field">
+            <label>Tu dedicatoria (opcional) — va en una tarjeta con tu pedido</label>
+            <input type="text" id="pd-dedicatoria" maxlength="200" placeholder="Escribe unas líneas y firma para que sepan de quién es 💜">
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Fecha de entrega</label>
+              <input type="text" id="pd-fecha" placeholder="dd/mm/aaaa" onfocus="(this.type='date')" min="${minDeliveryDate()}">
+            </div>
+            <div class="field">
+              <label>Horario de entrega</label>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="chip active" id="horario-manana" onclick="setHorario('9am-1pm')">9am – 1pm</button>
+                <button type="button" class="chip" id="horario-tarde" onclick="setHorario('1pm-6pm')">1pm – 6pm</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:1rem;" onclick="addProductFromPage(${p.id})">Agregar al carrito · S/ ${p.precio.toFixed(2)}</button>
+          <p style="font-size:.8rem;color:#9c8f86;text-align:center;margin-top:8px;">Entrega solo en Tacna · Pago 100% seguro con Mercado Pago</p>
+        </div>
+
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+          <button class="acc-toggle" onclick="toggleAcc('acc-incluye')">¿Qué incluye este arreglo? <span>+</span></button>
+          <div class="acc-body" id="acc-incluye" style="display:none;padding:0 18px 16px;">
+            <p style="color:#544943;">${p.incluye || "Producto + tarjeta de dedicatoria (opcional)."}</p>
+          </div>
+        </div>
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+          <button class="acc-toggle" onclick="toggleAcc('acc-faq')">Preguntas frecuentes <span>+</span></button>
+          <div class="acc-body" id="acc-faq" style="display:none;padding:0 18px 16px;">
+            <p style="color:#544943;"><b>¿Puedo cambiar la fecha después de pedir?</b><br>Sí, escríbenos por WhatsApp y coordinamos.</p>
+            <p style="color:#544943;"><b>¿Hacen entregas el mismo día?</b><br>Sí, si confirmas antes de las 4:00 p.m., según tu distrito en Tacna.</p>
+            <p style="color:#544943;"><b>¿El producto es exactamente igual a la foto?</b><br>Foto referencial — el follaje y color de envoltura pueden variar levemente según disponibilidad.</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function setHorario(valor){
+  selectedHorario = valor;
+  document.getElementById("horario-manana").classList.toggle("active", valor === "9am-1pm");
+  document.getElementById("horario-tarde").classList.toggle("active", valor === "1pm-6pm");
+}
+
+function toggleAcc(id){
+  const el = document.getElementById(id);
+  const open = el.style.display !== "none";
+  el.style.display = open ? "none" : "block";
+  const btn = el.previousElementSibling;
+  btn.querySelector("span").textContent = open ? "+" : "−";
+}
+
+function addProductFromPage(productId){
+  const dedicatoria = document.getElementById("pd-dedicatoria").value.trim();
+  const fecha = document.getElementById("pd-fecha").value;
+  addToCart(productId, 1, { dedicatoria, fecha, horario: selectedHorario });
 }
 
 // ---------- Aplica WhatsApp / correo cargados desde products.json ----------
@@ -165,4 +275,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCatalogFilters();
   renderCatalogGrid();
   renderCartPage();
+  renderProductPage();
 });

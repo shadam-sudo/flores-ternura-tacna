@@ -94,6 +94,10 @@
       <label>Descripción corta</label>
       <input type="text" id="p-desc" placeholder="Ramo clásico envuelto en papel kraft con cinta.">
     </div>
+    <div class="field">
+      <label>¿Qué incluye? (se muestra en la página del producto)</label>
+      <input type="text" id="p-incluye" placeholder="Flores frescas + follaje + papel de envoltura + tarjeta de dedicatoria.">
+    </div>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-primary" onclick="saveProductForm()" id="save-product-btn">Agregar a la lista</button>
       <button class="btn btn-outline" onclick="resetForm()" id="cancel-edit-btn" style="display:none;">Cancelar edición</button>
@@ -209,6 +213,7 @@ function saveProductForm(){
   const precio = parseFloat(document.getElementById("p-precio").value);
   const categoria = document.getElementById("p-categoria").value;
   const desc = document.getElementById("p-desc").value.trim();
+  const incluye = document.getElementById("p-incluye").value.trim();
   const ocasiones = Array.from(document.querySelectorAll("#p-ocasiones input:checked")).map(el => el.value);
 
   if(!nombre || isNaN(precio)){
@@ -218,12 +223,12 @@ function saveProductForm(){
 
   if(editingId){
     const p = STATE.products.find(x => x.id === editingId);
-    p.nombre = nombre; p.precio = precio; p.categoria = categoria; p.desc = desc; p.ocasiones = ocasiones;
+    p.nombre = nombre; p.precio = precio; p.categoria = categoria; p.desc = desc; p.incluye = incluye; p.ocasiones = ocasiones;
     if(pendingImg) p.img = pendingImg;
   } else {
     const nextId = STATE.products.length ? Math.max(...STATE.products.map(p=>p.id)) + 1 : 1;
     STATE.products.push({
-      id: nextId, nombre, precio, categoria, desc, ocasiones,
+      id: nextId, nombre, precio, categoria, desc, incluye, ocasiones,
       img: pendingImg || "ph-flor.svg"
     });
   }
@@ -241,6 +246,7 @@ function editProduct(id){
   document.getElementById("p-precio").value = p.precio;
   document.getElementById("p-categoria").value = p.categoria;
   document.getElementById("p-desc").value = p.desc || "";
+  document.getElementById("p-incluye").value = p.incluye || "";
   document.querySelectorAll("#p-ocasiones input").forEach(el => {
     el.checked = p.ocasiones.includes(el.value);
   });
@@ -262,6 +268,7 @@ function resetForm(){
   document.getElementById("p-nombre").value = "";
   document.getElementById("p-precio").value = "";
   document.getElementById("p-desc").value = "";
+  document.getElementById("p-incluye").value = "";
   document.getElementById("p-img-status").textContent = "";
   document.getElementById("p-img-file").value = "";
   document.querySelectorAll("#p-ocasiones input").forEach(el => el.checked = false);
