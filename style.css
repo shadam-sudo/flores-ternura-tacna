@@ -44,7 +44,7 @@ header.site{
   padding:16px 0;
 }
 .logo{font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:var(--wine); display:flex; align-items:center; gap:10px;}
-.logo-icon{width:36px; height:36px; border-radius:50%; object-fit:cover; flex-shrink:0;}
+.logo-icon{width:58px; height:58px; border-radius:50%; object-fit:cover; flex-shrink:0;}
 .logo span{color:var(--gold);}
 .nav-links{display:flex; gap:28px; font-size:.95rem;}
 .nav-links a{padding:6px 0; border-bottom:2px solid transparent;}
