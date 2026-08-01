@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel de administración | Flores & Ternura Tacna</title>
+<link rel="icon" type="image/png" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-wrap{max-width:920px;margin:0 auto;padding:40px 24px 80px;}
+  .admin-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:24px;}
+  .admin-card h2{font-size:1.2rem;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:.85rem;font-weight:600;margin-bottom:5px;color:#544943;}
+  .field input[type=text],.field input[type=number],.field input[type=password],.field select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.95rem;
+  }
+  .checks{display:flex;flex-wrap:wrap;gap:10px;}
+  .checks label{font-weight:400;font-size:.85rem;display:flex;align-items:center;gap:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#F3E7DC;}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
+  .mini-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.8rem;margin-right:4px;}
+  .mini-btn.danger{color:#a12a2a;border-color:#e2b8b8;}
+  #login-screen{max-width:360px;margin:100px auto;text-align:center;}
+  #status-msg{font-size:.9rem;margin-top:10px;padding:10px;border-radius:8px;display:none;}
+  #status-msg.ok{display:block;background:#e7f3e5;color:#2c5a2a;}
+  #status-msg.err{display:block;background:#fbe6e6;color:#a12a2a;}
+  #panel{display:none;}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a href="index.html" class="logo"><img src="logo.png" alt="Flores & Ternura Tacna" class="logo-icon">Flores <span>&</span> Ternura <span>Tacna</span></a>
+    <span style="font-size:.85rem;color:var(--sage);">Panel de administración</span>
+  </div>
+</header>
+
+<div id="login-screen">
+  <h2>Ingresar</h2>
+  <p style="color:#6b5f57;font-size:.9rem;">Ingresa la contraseña del panel.</p>
+  <div class="field"><input type="password" id="login-password" placeholder="Contraseña"></div>
+  <button class="btn btn-primary" style="width:100%;" onclick="login()">Entrar</button>
+  <p id="login-error" style="color:#a12a2a;font-size:.85rem;margin-top:10px;"></p>
+</div>
+
+<div id="panel" class="admin-wrap">
+
+  <div class="admin-card">
+    <h2>Datos de contacto</h2>
+    <div class="row2">
+      <div class="field">
+        <label>WhatsApp (formato: 51 + número, sin espacios)</label>
+        <input type="text" id="site-whatsapp" placeholder="51900000000">
+      </div>
+      <div class="field">
+        <label>Correo de contacto</label>
+        <input type="text" id="site-email" placeholder="contacto@tudominio.com">
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Redes sociales</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">Pega el link completo de cada red (ej: https://instagram.com/tu_negocio). Deja en blanco las que no uses.</p>
+    <div class="row2">
+      <div class="field">
+        <label>Instagram</label>
+        <input type="text" id="social-instagram" placeholder="https://instagram.com/...">
+      </div>
+      <div class="field">
+        <label>Facebook</label>
+        <input type="text" id="social-facebook" placeholder="https://facebook.com/...">
+      </div>
+    </div>
+    <div class="field">
+      <label>TikTok</label>
+      <input type="text" id="social-tiktok" placeholder="https://tiktok.com/@...">
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Zonas de entrega (Tacna) y precio de envío</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
+      Pon el precio de envío para cada distrito de la provincia de Tacna. Deja en 0 si el envío es gratis a ese distrito.
+    </p>
+    <table>
+      <thead><tr><th>Distrito</th><th style="width:140px;">Tiempo</th><th style="width:140px;">Precio (S/)</th></tr></thead>
+      <tbody id="zonas-table-body"></tbody>
+    </table>
+  </div>
+
+  <div class="admin-card">
+    <h2>Código de descuento</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">Solo puedes tener un código activo a la vez. Déjalo vacío para desactivarlo.</p>
+    <div class="row2">
+      <div class="field">
+        <label>Código (ej: BIENVENIDA10)</label>
+        <input type="text" id="promo-codigo" placeholder="BIENVENIDA10" style="text-transform:uppercase;">
+      </div>
+      <div class="field">
+        <label>Descuento (%)</label>
+        <input type="number" id="promo-porcentaje" min="0" max="100" placeholder="10">
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Métodos de pago</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
+      Deja en blanco los que no uses — solo se muestran a tus clientes los que completes. Mercado Pago sigue funcionando aparte, con tarjeta.
+    </p>
+    <div class="row2">
+      <div class="field">
+        <label>Número de Yape</label>
+        <input type="text" id="pay-yape" placeholder="987 654 321">
+      </div>
+      <div class="field">
+        <label>Nombre en Yape</label>
+        <input type="text" id="pay-yape-nombre" placeholder="Nombre y apellido">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Número de Plin</label>
+        <input type="text" id="pay-plin" placeholder="987 654 321">
+      </div>
+      <div class="field">
+        <label>Nombre en Plin</label>
+        <input type="text" id="pay-plin-nombre" placeholder="Nombre y apellido">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Cuenta BCP</label>
+        <input type="text" id="pay-bcp" placeholder="Número de cuenta">
+      </div>
+      <div class="field">
+        <label>CCI BCP</label>
+        <input type="text" id="pay-bcp-cci" placeholder="Código de cuenta interbancario">
+      </div>
+    </div>
+    <div class="field">
+      <label>Titular cuenta BCP</label>
+      <input type="text" id="pay-bcp-titular" placeholder="Nombre y apellido">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Cuenta Banco de la Nación</label>
+        <input type="text" id="pay-bn" placeholder="Número de cuenta">
+      </div>
+      <div class="field">
+        <label>Titular Banco de la Nación</label>
+        <input type="text" id="pay-bn-titular" placeholder="Nombre y apellido">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Cuenta Interbank</label>
+        <input type="text" id="pay-interbank" placeholder="Número de cuenta">
+      </div>
+      <div class="field">
+        <label>Titular Interbank</label>
+        <input type="text" id="pay-interbank-titular" placeholder="Nombre y apellido">
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2 id="form-title">Agregar producto</h2>
+    <div class="row2">
+      <div class="field">
+        <label>Nombre del producto</label>
+        <input type="text" id="p-nombre" placeholder="Ramo de 12 Rosas Rojas">
+      </div>
+      <div class="field">
+        <label>Precio (S/)</label>
+        <input type="number" id="p-precio" placeholder="89" min="0" step="1">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Categoría</label>
+        <select id="p-categoria"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Fotos del producto (hasta 3, opcionales — la primera se usa como principal)</label>
+      <div class="pd-thumbs" style="margin-bottom:8px;">
+        <div>
+          <input type="file" id="p-img-file-0" accept="image/*" onchange="uploadImageSlot(0)" style="width:120px;">
+          <img id="p-img-preview-0" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;margin-top:6px;">
+        </div>
+        <div>
+          <input type="file" id="p-img-file-1" accept="image/*" onchange="uploadImageSlot(1)" style="width:120px;">
+          <img id="p-img-preview-1" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;margin-top:6px;">
+        </div>
+        <div>
+          <input type="file" id="p-img-file-2" accept="image/*" onchange="uploadImageSlot(2)" style="width:120px;">
+          <img id="p-img-preview-2" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;margin-top:6px;">
+        </div>
+      </div>
+      <div id="p-img-status" style="font-size:.8rem;color:#6b5f57;"></div>
+    </div>
+    <div class="field">
+      <label>Ocasiones</label>
+      <div class="checks" id="p-ocasiones"></div>
+    </div>
+    <div class="field">
+      <label>Descripción corta</label>
+      <input type="text" id="p-desc" placeholder="Ramo clásico envuelto en papel kraft con cinta.">
+    </div>
+    <div class="field">
+      <label>¿Qué incluye? (se muestra en la página del producto)</label>
+      <input type="text" id="p-incluye" placeholder="Flores frescas + follaje + papel de envoltura + tarjeta de dedicatoria.">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveProductForm()" id="save-product-btn">Agregar a la lista</button>
+      <button class="btn btn-outline" onclick="resetForm()" id="cancel-edit-btn" style="display:none;">Cancelar edición</button>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>Productos (<span id="prod-count">0</span>)</h2>
+    <table>
+      <thead><tr><th></th><th>Nombre</th><th>Categoría</th><th>Precio</th><th></th></tr></thead>
+      <tbody id="prod-table-body"></tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-primary" style="width:100%;padding:16px;font-size:1.05rem;" onclick="publishChanges()">Publicar cambios en la tienda</button>
+  <p style="font-size:.8rem;color:#6b5f57;text-align:center;margin-top:8px;">Los cambios tardan ~1 minuto en verse reflejados en tu tienda.</p>
+  <div id="status-msg"></div>
+</div>
+
+<script src="taxonomy.js"></script>
+<script>
+function updateZonaPrecio(idx, valor){
+  STATE.site.zonasEnvio[idx].precio = parseFloat(valor) || 0;
+}
+
+function updateZonaTiempo(idx, valor){
+  STATE.site.zonasEnvio[idx].tiempo = valor;
+}
+
+let PASSWORD = "";
+let STATE = { site: {}, products: [] };
+let editingId = null;
+
+function login(){
+  const password = document.getElementById("login-password").value;
+  fetch("/api/admin-login", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ password })
+  }).then(r => r.json()).then(data => {
+    if(data.ok){
+      PASSWORD = password;
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      loadState();
+    } else {
+      document.getElementById("login-error").textContent = data.error || "Contraseña incorrecta.";
+    }
+  }).catch(() => {
+    document.getElementById("login-error").textContent = "Error de conexión.";
+  });
+}
+
+async function loadState(){
+  const res = await fetch("products.json?t=" + Date.now());
+  const data = await res.json();
+  STATE = { site: data.site || {}, products: data.products || [] };
+  document.getElementById("site-whatsapp").value = STATE.site.whatsapp || "";
+  document.getElementById("site-email").value = STATE.site.email || "";
+
+  const promo = STATE.site.promo || {};
+  document.getElementById("promo-codigo").value = promo.codigo || "";
+  document.getElementById("promo-porcentaje").value = promo.porcentaje || "";
+
+  const social = STATE.site.social || {};
+  document.getElementById("social-instagram").value = social.instagram || "";
+  document.getElementById("social-facebook").value = social.facebook || "";
+  document.getElementById("social-tiktok").value = social.tiktok || "";
+
+  STATE.site.zonasEnvio = (STATE.site.zonasEnvio && STATE.site.zonasEnvio.length) ? STATE.site.zonasEnvio : JSON.parse(JSON.stringify(DEFAULT_ZONAS));
+  const zonasBody = document.getElementById("zonas-table-body");
+  zonasBody.innerHTML = STATE.site.zonasEnvio.map((z, idx) => `
+    <tr>
+      <td>${z.distrito}</td>
+      <td>
+        <select onchange="updateZonaTiempo(${idx}, this.value)" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
+          <option value="2-4 horas" ${z.tiempo === "2-4 horas" ? "selected" : ""}>2–4 horas</option>
+          <option value="mismo dia" ${z.tiempo !== "2-4 horas" ? "selected" : ""}>El mismo día</option>
+        </select>
+      </td>
+      <td><input type="number" min="0" step="0.5" value="${z.precio}" onchange="updateZonaPrecio(${idx}, this.value)" style="width:100px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td>
+    </tr>`).join("");
+
+  const pagos = STATE.site.pagos || {};
+  document.getElementById("pay-yape").value = pagos.yape || "";
+  document.getElementById("pay-yape-nombre").value = pagos.yapeNombre || "";
+  document.getElementById("pay-plin").value = pagos.plin || "";
+  document.getElementById("pay-plin-nombre").value = pagos.plinNombre || "";
+  document.getElementById("pay-bcp").value = pagos.bcp || "";
+  document.getElementById("pay-bcp-cci").value = pagos.bcpCci || "";
+  document.getElementById("pay-bcp-titular").value = pagos.bcpTitular || "";
+  document.getElementById("pay-bn").value = pagos.bn || "";
+  document.getElementById("pay-bn-titular").value = pagos.bnTitular || "";
+  document.getElementById("pay-interbank").value = pagos.interbank || "";
+  document.getElementById("pay-interbank-titular").value = pagos.interbankTitular || "";
+
+  const catSel = document.getElementById("p-categoria");
+  catSel.innerHTML = CATEGORIAS.map(c => `<option value="${c.key}">${c.label}</option>`).join("");
+
+  const ocWrap = document.getElementById("p-ocasiones");
+  ocWrap.innerHTML = OCASIONES.map(o => `<label><input type="checkbox" value="${o.key}"> ${o.label}</label>`).join("");
+
+  renderTable();
+}
+
+function renderTable(){
+  const body = document.getElementById("prod-table-body");
+  document.getElementById("prod-count").textContent = STATE.products.length;
+  body.innerHTML = STATE.products.map(p => `
+    <tr>
+      <td><img class="thumb" src="${(p.imagenes && p.imagenes[0]) || p.img || 'ph-flor.svg'}" alt=""></td>
+      <td>${p.nombre}</td>
+      <td>${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</td>
+      <td>S/ ${Number(p.precio).toFixed(2)}</td>
+      <td>
+        <button class="mini-btn" onclick="editProduct(${p.id})">Editar</button>
+        <button class="mini-btn danger" onclick="deleteProduct(${p.id})">Eliminar</button>
+      </td>
+    </tr>`).join("");
+}
+
+let pendingImgs = [null, null, null];   // nuevas subidas en esta sesión (por slot)
+let existingImgs = [null, null, null];  // fotos que ya tenía el producto al editar
+
+async function uploadImageSlot(slot){
+  const file = document.getElementById(`p-img-file-${slot}`).files[0];
+  if(!file) return;
+  const statusEl = document.getElementById("p-img-status");
+  statusEl.textContent = `Procesando y subiendo foto ${slot + 1}...`;
+
+  // Intenta en alta calidad; si el archivo resultante sigue siendo muy pesado
+  // para el servidor, reduce un poco y reintenta (hasta 3.8 MB aprox. en base64).
+  const intentos = [
+    { maxDim: 2400, quality: 0.94 },
+    { maxDim: 2000, quality: 0.88 },
+    { maxDim: 1600, quality: 0.82 },
+    { maxDim: 1200, quality: 0.75 }
+  ];
+
+  try{
+    let base64 = null;
+    for(const opt of intentos){
+      base64 = await resizeAndCompressImage(file, opt.maxDim, opt.quality);
+      if(base64.length < 3.8 * 1024 * 1024) break; // suficientemente liviana
+    }
+
+    const filename = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    const res = await fetch("/api/admin-upload-image", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, filename, contentBase64: base64 })
+    });
+    const data = await res.json();
+    if(data.ok){
+      pendingImgs[slot] = data.url;
+      const preview = document.getElementById(`p-img-preview-${slot}`);
+      preview.src = data.url;
+      preview.style.display = "block";
+      statusEl.textContent = `Foto ${slot + 1} lista ✓`;
+    } else {
+      statusEl.textContent = "Error: " + (data.error || "no se pudo subir");
+    }
+  } catch(e){
+    statusEl.textContent = "Error al procesar o subir la imagen.";
+  }
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Redimensiona y comprime la foto en el navegador antes de subirla,
+// para que nunca pese demasiado y falle la subida.
+function resizeAndCompressImage(file, maxDim = 2400, quality = 0.94){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl.split(",")[1]);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveProductForm(){
+  const nombre = document.getElementById("p-nombre").value.trim();
+  const precio = parseFloat(document.getElementById("p-precio").value);
+  const categoria = document.getElementById("p-categoria").value;
+  const desc = document.getElementById("p-desc").value.trim();
+  const incluye = document.getElementById("p-incluye").value.trim();
+  const ocasiones = Array.from(document.querySelectorAll("#p-ocasiones input:checked")).map(el => el.value);
+
+  if(!nombre || isNaN(precio)){
+    alert("Completa al menos el nombre y el precio.");
+    return;
+  }
+
+  // combina, por cada slot (0,1,2), la foto recién subida o la que ya tenía
+  const imagenes = [0,1,2]
+    .map(i => pendingImgs[i] || existingImgs[i])
+    .filter(Boolean);
+
+  if(editingId){
+    const p = STATE.products.find(x => x.id === editingId);
+    p.nombre = nombre; p.precio = precio; p.categoria = categoria; p.desc = desc; p.incluye = incluye; p.ocasiones = ocasiones;
+    if(imagenes.length) { p.imagenes = imagenes; p.img = imagenes[0]; }
+  } else {
+    const nextId = STATE.products.length ? Math.max(...STATE.products.map(p=>p.id)) + 1 : 1;
+    STATE.products.push({
+      id: nextId, nombre, precio, categoria, desc, incluye, ocasiones,
+      imagenes: imagenes.length ? imagenes : ["ph-flor.svg"],
+      img: imagenes[0] || "ph-flor.svg"
+    });
+  }
+  resetForm();
+  renderTable();
+}
+
+function editProduct(id){
+  const p = STATE.products.find(x => x.id === id);
+  if(!p) return;
+  editingId = id;
+  pendingImgs = [null, null, null];
+  const fotos = (p.imagenes && p.imagenes.length) ? p.imagenes : (p.img ? [p.img] : []);
+  existingImgs = [fotos[0] || null, fotos[1] || null, fotos[2] || null];
+  document.getElementById("form-title").textContent = "Editar producto";
+  document.getElementById("p-nombre").value = p.nombre;
+  document.getElementById("p-precio").value = p.precio;
+  document.getElementById("p-categoria").value = p.categoria;
+  document.getElementById("p-desc").value = p.desc || "";
+  document.getElementById("p-incluye").value = p.incluye || "";
+  document.querySelectorAll("#p-ocasiones input").forEach(el => {
+    el.checked = p.ocasiones.includes(el.value);
+  });
+  [0,1,2].forEach(i => {
+    const preview = document.getElementById(`p-img-preview-${i}`);
+    if(existingImgs[i]){ preview.src = existingImgs[i]; preview.style.display = "block"; }
+    else { preview.src = ""; preview.style.display = "none"; }
+    document.getElementById(`p-img-file-${i}`).value = "";
+  });
+  document.getElementById("save-product-btn").textContent = "Guardar cambios";
+  document.getElementById("cancel-edit-btn").style.display = "inline-block";
+  window.scrollTo({ top: 300, behavior: "smooth" });
+}
+
+function deleteProduct(id){
+  if(!confirm("¿Eliminar este producto de la lista?")) return;
+  STATE.products = STATE.products.filter(p => p.id !== id);
+  renderTable();
+}
+
+function resetForm(){
+  editingId = null;
+  pendingImgs = [null, null, null];
+  existingImgs = [null, null, null];
+  document.getElementById("form-title").textContent = "Agregar producto";
+  document.getElementById("p-nombre").value = "";
+  document.getElementById("p-precio").value = "";
+  document.getElementById("p-desc").value = "";
+  document.getElementById("p-incluye").value = "";
+  document.getElementById("p-img-status").textContent = "";
+  [0,1,2].forEach(i => {
+    document.getElementById(`p-img-file-${i}`).value = "";
+    const preview = document.getElementById(`p-img-preview-${i}`);
+    preview.src = "";
+    preview.style.display = "none";
+  });
+  document.querySelectorAll("#p-ocasiones input").forEach(el => el.checked = false);
+  document.getElementById("save-product-btn").textContent = "Agregar a la lista";
+  document.getElementById("cancel-edit-btn").style.display = "none";
+}
+
+async function publishChanges(){
+  STATE.site.whatsapp = document.getElementById("site-whatsapp").value.trim();
+  STATE.site.email = document.getElementById("site-email").value.trim();
+  STATE.site.social = {
+    instagram: document.getElementById("social-instagram").value.trim(),
+    facebook: document.getElementById("social-facebook").value.trim(),
+    tiktok: document.getElementById("social-tiktok").value.trim()
+  };
+  STATE.site.promo = {
+    codigo: document.getElementById("promo-codigo").value.trim().toUpperCase(),
+    porcentaje: parseFloat(document.getElementById("promo-porcentaje").value) || 0
+  };
+  STATE.site.pagos = {
+    yape: document.getElementById("pay-yape").value.trim(),
+    yapeNombre: document.getElementById("pay-yape-nombre").value.trim(),
+    plin: document.getElementById("pay-plin").value.trim(),
+    plinNombre: document.getElementById("pay-plin-nombre").value.trim(),
+    bcp: document.getElementById("pay-bcp").value.trim(),
+    bcpCci: document.getElementById("pay-bcp-cci").value.trim(),
+    bcpTitular: document.getElementById("pay-bcp-titular").value.trim(),
+    bn: document.getElementById("pay-bn").value.trim(),
+    bnTitular: document.getElementById("pay-bn-titular").value.trim(),
+    interbank: document.getElementById("pay-interbank").value.trim(),
+    interbankTitular: document.getElementById("pay-interbank-titular").value.trim()
+  };
+
+  const statusEl = document.getElementById("status-msg");
+  statusEl.className = ""; statusEl.style.display = "none";
+
+  try{
+    const res = await fetch("/api/admin-save", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, site: STATE.site, products: STATE.products })
+    });
+    const data = await res.json();
+    if(data.ok){
+      statusEl.className = "ok";
+      statusEl.textContent = "✓ Cambios publicados. Tu tienda se actualizará en ~1 minuto.";
+    } else {
+      statusEl.className = "err";
+      statusEl.textContent = "Error: " + (data.error || "no se pudo guardar.");
+    }
+  } catch(e){
+    statusEl.className = "err";
+    statusEl.textContent = "Error de conexión al guardar.";
+  }
+  statusEl.style.display = "block";
+}
+</script>
+</body>
+</html>
