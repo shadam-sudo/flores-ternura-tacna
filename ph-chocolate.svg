@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
-  <rect width="400" height="400" fill="#F3E7DC"/>
-  <rect x="110" y="130" width="180" height="140" rx="10" fill="#6B1E3C"/>
+  <rect width="400" height="400" fill="#FBD6E4"/>
+  <rect x="110" y="130" width="180" height="140" rx="10" fill="#D6136C"/>
   <rect x="126" y="146" width="148" height="108" rx="6" fill="#3B241C"/>
   <line x1="126" y1="182" x2="274" y2="182" stroke="#5c3a2c" stroke-width="4"/>
   <line x1="126" y1="218" x2="274" y2="218" stroke="#5c3a2c" stroke-width="4"/>
   <line x1="163" y1="146" x2="163" y2="254" stroke="#5c3a2c" stroke-width="4"/>
   <line x1="200" y1="146" x2="200" y2="254" stroke="#5c3a2c" stroke-width="4"/>
   <line x1="237" y1="146" x2="237" y2="254" stroke="#5c3a2c" stroke-width="4"/>
-  <rect x="185" y="118" width="30" height="26" fill="#B8862E"/>
-  <path d="M170,118 Q200,90 230,118" stroke="#B8862E" stroke-width="8" fill="none"/>
+  <rect x="185" y="118" width="30" height="26" fill="#F5A623"/>
+  <path d="M170,118 Q200,90 230,118" stroke="#F5A623" stroke-width="8" fill="none"/>
   <text x="200" y="370" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#9c8f86">foto próximamente</text>
 </svg>

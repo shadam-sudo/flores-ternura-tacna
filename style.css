@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap');
 
 :root{
-  --cream: #FAF6F0;
-  --wine: #6B1E3C;
-  --wine-dark: #4E1530;
-  --rose: #D89AA6;
-  --sage: #6B7A5E;
-  --gold: #B8862E;
+  --cream: #FFFBF5;
+  --wine: #D6136C;
+  --wine-dark: #A30E52;
+  --rose: #FBD6E4;
+  --sage: #0F5E4C;
+  --gold: #F5A623;
   --ink: #2B2320;
-  --line: #E4D9CC;
+  --line: #F0DCE6;
   --radius: 14px;
 }
 
@@ -43,7 +43,8 @@ header.site{
   display:flex; align-items:center; justify-content:space-between;
   padding:16px 0;
 }
-.logo{font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:var(--wine);}
+.logo{font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:var(--wine); display:flex; align-items:center; gap:10px;}
+.logo-icon{width:36px; height:36px; border-radius:50%; object-fit:cover; flex-shrink:0;}
 .logo span{color:var(--gold);}
 .nav-links{display:flex; gap:28px; font-size:.95rem;}
 .nav-links a{padding:6px 0; border-bottom:2px solid transparent;}
