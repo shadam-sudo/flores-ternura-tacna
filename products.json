@@ -4,8 +4,8 @@
     "whatsapp": "51900000000",
     "email": "contacto@floresyternuratacna.pe",
     "pagos": {
-      "yape": "982469862",
-      "yapeNombre": "SHADAM JESUS SERRANO RIVERA",
+      "yape": "",
+      "yapeNombre": "",
       "plin": "",
       "plinNombre": "",
       "bcp": "",
@@ -27,7 +27,7 @@
         "aniversario"
       ],
       "precio": 89,
-      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785550636381-12ROSAS.webp",
+      "img": "ph-flor.svg",
       "desc": "Ramo clásico de 12 rosas rojas frescas, envuelto en papel kraft con cinta.",
       "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional)."
     },
