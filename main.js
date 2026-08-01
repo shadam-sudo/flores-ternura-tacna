@@ -507,6 +507,15 @@ function closeAddedModal(){
   if(el) el.remove();
 }
 
+// ---------- Zonas de entrega (home) ----------
+function renderZonasHome(){
+  const el = document.getElementById("zonas-home-grid");
+  if(!el) return;
+  const zonas = (SITE.zonasEnvio && SITE.zonasEnvio.length) ? SITE.zonasEnvio : DEFAULT_ZONAS;
+  el.innerHTML = zonas.map(z => `
+    <div><b>${z.distrito}</b>Entrega ${z.tiempo === "2-4 horas" ? "en 2–4 horas" : "el mismo día"}</div>`).join("");
+}
+
 // ---------- Aplica WhatsApp / correo cargados desde products.json ----------
 function applySiteConfig(){
   document.querySelectorAll("[data-wa-link]").forEach(a => {
@@ -524,6 +533,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadCatalog();
   applySiteConfig();
   renderFeatured();
+  renderZonasHome();
   renderCatalogFilters();
   renderCatalogGrid();
   renderCartPage();

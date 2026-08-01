@@ -69,7 +69,7 @@
       Pon el precio de envío para cada distrito de la provincia de Tacna. Deja en 0 si el envío es gratis a ese distrito.
     </p>
     <table>
-      <thead><tr><th>Distrito</th><th style="width:140px;">Precio (S/)</th></tr></thead>
+      <thead><tr><th>Distrito</th><th style="width:140px;">Tiempo</th><th style="width:140px;">Precio (S/)</th></tr></thead>
       <tbody id="zonas-table-body"></tbody>
     </table>
   </div>
@@ -210,6 +210,10 @@ function updateZonaPrecio(idx, valor){
   STATE.site.zonasEnvio[idx].precio = parseFloat(valor) || 0;
 }
 
+function updateZonaTiempo(idx, valor){
+  STATE.site.zonasEnvio[idx].tiempo = valor;
+}
+
 let PASSWORD = "";
 let STATE = { site: {}, products: [] };
 let editingId = null;
@@ -249,6 +253,12 @@ async function loadState(){
   zonasBody.innerHTML = STATE.site.zonasEnvio.map((z, idx) => `
     <tr>
       <td>${z.distrito}</td>
+      <td>
+        <select onchange="updateZonaTiempo(${idx}, this.value)" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;">
+          <option value="2-4 horas" ${z.tiempo === "2-4 horas" ? "selected" : ""}>2–4 horas</option>
+          <option value="mismo dia" ${z.tiempo !== "2-4 horas" ? "selected" : ""}>El mismo día</option>
+        </select>
+      </td>
       <td><input type="number" min="0" step="0.5" value="${z.precio}" onchange="updateZonaPrecio(${idx}, this.value)" style="width:100px;padding:8px;border:1px solid var(--line);border-radius:6px;"></td>
     </tr>`).join("");
 

@@ -21,15 +21,15 @@ const CATEGORIAS = [
 // Distritos de la provincia de Tacna — respaldo por si products.json aún no los tiene.
 // En cuanto publiques cambios desde el panel, esta lista queda guardada en products.json.
 const DEFAULT_ZONAS = [
-  { distrito: "Tacna (Cercado)", precio: 0 },
-  { distrito: "Alto de la Alianza", precio: 0 },
-  { distrito: "Ciudad Nueva", precio: 0 },
-  { distrito: "Coronel Gregorio Albarracín Lanchipa", precio: 0 },
-  { distrito: "Pocollay", precio: 0 },
-  { distrito: "Calana", precio: 0 },
-  { distrito: "Pachía", precio: 0 },
-  { distrito: "Palca", precio: 0 },
-  { distrito: "Inclán", precio: 0 },
-  { distrito: "Sama (Las Yaras)", precio: 0 },
-  { distrito: "La Yarada - Los Palos", precio: 0 }
+  { distrito: "Tacna (Cercado)", precio: 0, tiempo: "2-4 horas" },
+  { distrito: "Alto de la Alianza", precio: 0, tiempo: "2-4 horas" },
+  { distrito: "Ciudad Nueva", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Coronel Gregorio Albarracín Lanchipa", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Pocollay", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Calana", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Pachía", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Palca", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Inclán", precio: 0, tiempo: "mismo dia" },
+  { distrito: "Sama (Las Yaras)", precio: 0, tiempo: "mismo dia" },
+  { distrito: "La Yarada - Los Palos", precio: 0, tiempo: "mismo dia" }
 ];
