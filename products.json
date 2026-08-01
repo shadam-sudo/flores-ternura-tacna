@@ -87,9 +87,13 @@
         "aniversario"
       ],
       "precio": 89,
-      "img": "ph-flor.svg",
+      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785561870473-12ROSAS.webp",
       "desc": "Ramo clásico de 12 rosas rojas frescas, envuelto en papel kraft con cinta.",
-      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional)."
+      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional).",
+      "imagenes": [
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785561870473-12ROSAS.webp",
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785561938554-12ROSAS2.webp"
+      ]
     },
     {
       "id": 2,
