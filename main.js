@@ -185,17 +185,21 @@ function renderProductPage(){
   document.title = `${p.nombre} | ${SITE.nombre || "Flores & Ternura Tacna"}`;
 
   container.innerHTML = `
-    <div class="cart-layout">
-      <div class="prod-img" style="border-radius:14px;overflow:hidden;">
-        <img src="${p.img}" alt="${p.nombre}" style="width:100%;">
-      </div>
+    <div class="pd-layout">
+      <div class="pd-image"><img src="${p.img}" alt="${p.nombre}"></div>
       <div>
         <div class="prod-tags"><span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span></div>
-        <h1 style="margin-top:8px;">${p.nombre}</h1>
-        <div class="price" style="font-size:1.6rem;">S/ ${p.precio.toFixed(2)}</div>
-        <p style="color:#544943;margin:14px 0;">${p.desc || ""}</p>
+        <h1 style="margin-top:10px;">${p.nombre}</h1>
+        <div class="pd-price price">S/ ${p.precio.toFixed(2)}</div>
+        <p style="color:#544943;line-height:1.6;">${p.desc || ""}</p>
 
-        <div class="admin-card" style="padding:18px;">
+        <div class="pd-trust">
+          <span>🚚 Entrega en Tacna</span>
+          <span>🔒 Pago seguro con Mercado Pago</span>
+          <span>💬 Coordinamos por WhatsApp</span>
+        </div>
+
+        <div class="panel-card">
           <div class="field">
             <label>Tu dedicatoria (opcional) — va en una tarjeta con tu pedido</label>
             <input type="text" id="pd-dedicatoria" maxlength="200" placeholder="Escribe unas líneas y firma para que sepan de quién es 💜">
@@ -203,32 +207,32 @@ function renderProductPage(){
           <div class="row2">
             <div class="field">
               <label>Fecha de entrega</label>
-              <input type="text" id="pd-fecha" placeholder="dd/mm/aaaa" onfocus="(this.type='date')" min="${minDeliveryDate()}">
+              <input type="date" id="pd-fecha" min="${minDeliveryDate()}">
             </div>
             <div class="field">
               <label>Horario de entrega</label>
-              <div style="display:flex;gap:8px;">
-                <button type="button" class="chip active" id="horario-manana" onclick="setHorario('9am-1pm')">9am – 1pm</button>
-                <button type="button" class="chip" id="horario-tarde" onclick="setHorario('1pm-6pm')">1pm – 6pm</button>
+              <div class="horario-group">
+                <button type="button" class="horario-btn active" id="horario-manana" onclick="setHorario('9am-1pm')">9am – 1pm</button>
+                <button type="button" class="horario-btn" id="horario-tarde" onclick="setHorario('1pm-6pm')">1pm – 6pm</button>
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:1rem;" onclick="addProductFromPage(${p.id})">Agregar al carrito · S/ ${p.precio.toFixed(2)}</button>
-          <p style="font-size:.8rem;color:#9c8f86;text-align:center;margin-top:8px;">Entrega solo en Tacna · Pago 100% seguro con Mercado Pago</p>
+          <button class="pd-cta" onclick="addProductFromPage(${p.id})">Agregar al carrito · S/ ${p.precio.toFixed(2)}</button>
+          <p class="pd-note">Entrega solo en Tacna · Pago 100% seguro con Mercado Pago</p>
         </div>
 
-        <div class="admin-card" style="padding:0;overflow:hidden;">
+        <div class="acc-card">
           <button class="acc-toggle" onclick="toggleAcc('acc-incluye')">¿Qué incluye este arreglo? <span>+</span></button>
-          <div class="acc-body" id="acc-incluye" style="display:none;padding:0 18px 16px;">
-            <p style="color:#544943;">${p.incluye || "Producto + tarjeta de dedicatoria (opcional)."}</p>
+          <div class="acc-body" id="acc-incluye" style="display:none;">
+            <p>${p.incluye || "Producto + tarjeta de dedicatoria (opcional)."}</p>
           </div>
         </div>
-        <div class="admin-card" style="padding:0;overflow:hidden;">
+        <div class="acc-card">
           <button class="acc-toggle" onclick="toggleAcc('acc-faq')">Preguntas frecuentes <span>+</span></button>
-          <div class="acc-body" id="acc-faq" style="display:none;padding:0 18px 16px;">
-            <p style="color:#544943;"><b>¿Puedo cambiar la fecha después de pedir?</b><br>Sí, escríbenos por WhatsApp y coordinamos.</p>
-            <p style="color:#544943;"><b>¿Hacen entregas el mismo día?</b><br>Sí, si confirmas antes de las 4:00 p.m., según tu distrito en Tacna.</p>
-            <p style="color:#544943;"><b>¿El producto es exactamente igual a la foto?</b><br>Foto referencial — el follaje y color de envoltura pueden variar levemente según disponibilidad.</p>
+          <div class="acc-body" id="acc-faq" style="display:none;">
+            <p><b>¿Puedo cambiar la fecha después de pedir?</b><br>Sí, escríbenos por WhatsApp y coordinamos.</p>
+            <p><b>¿Hacen entregas el mismo día?</b><br>Sí, si confirmas antes de las 4:00 p.m., según tu distrito en Tacna.</p>
+            <p><b>¿El producto es exactamente igual a la foto?</b><br>Foto referencial — el follaje y color de envoltura pueden variar levemente según disponibilidad.</p>
           </div>
         </div>
       </div>
