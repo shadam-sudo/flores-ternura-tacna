@@ -2,7 +2,7 @@
   "site": {
     "nombre": "Flores & Ternura Tacna",
     "whatsapp": "51982469862",
-    "email": "contacto@floresyternuratacna.pe"
+    "email": "detalles@floresyternuratacna.pe"
   },
   "products": [
     {
@@ -11,10 +11,13 @@
       "categoria": "flores",
       "ocasiones": [
         "enamorados",
-        "aniversario"
+        "aniversario",
+        "cumpleanos",
+        "graduacion",
+        "amistad"
       ],
       "precio": 89,
-      "img": "ph-flor.svg",
+      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785549595387-12ROSAS.webp",
       "desc": "Ramo clásico de 12 rosas rojas frescas, envuelto en papel kraft con cinta."
     },
     {
