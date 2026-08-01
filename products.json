@@ -100,13 +100,19 @@
       "nombre": "Box Floral Mixto",
       "categoria": "flores",
       "ocasiones": [
+        "enamorados",
+        "aniversario",
         "cumpleanos",
         "amistad"
       ],
       "precio": 79,
-      "img": "ph-flor.svg",
+      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785564105804-1.png",
       "desc": "Caja redonda con rosas, tulipanes y follaje de temporada.",
-      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional)."
+      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional).",
+      "imagenes": [
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785564105804-1.png",
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785564313742-WEBBOXIRINADIADELAMADRE2_75fadec4-fde1-4fb7-9d54-521ffe71f494.webp"
+      ]
     },
     {
       "id": 3,
