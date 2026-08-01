@@ -64,6 +64,21 @@
   </div>
 
   <div class="admin-card">
+    <h2>Código de descuento</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">Solo puedes tener un código activo a la vez. Déjalo vacío para desactivarlo.</p>
+    <div class="row2">
+      <div class="field">
+        <label>Código (ej: BIENVENIDA10)</label>
+        <input type="text" id="promo-codigo" placeholder="BIENVENIDA10" style="text-transform:uppercase;">
+      </div>
+      <div class="field">
+        <label>Descuento (%)</label>
+        <input type="number" id="promo-porcentaje" min="0" max="100" placeholder="10">
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-card">
     <h2>Métodos de pago</h2>
     <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
       Deja en blanco los que no uses — solo se muestran a tus clientes los que completes. Mercado Pago sigue funcionando aparte, con tarjeta.
@@ -210,6 +225,10 @@ async function loadState(){
   document.getElementById("site-whatsapp").value = STATE.site.whatsapp || "";
   document.getElementById("site-email").value = STATE.site.email || "";
 
+  const promo = STATE.site.promo || {};
+  document.getElementById("promo-codigo").value = promo.codigo || "";
+  document.getElementById("promo-porcentaje").value = promo.porcentaje || "";
+
   const pagos = STATE.site.pagos || {};
   document.getElementById("pay-yape").value = pagos.yape || "";
   document.getElementById("pay-yape-nombre").value = pagos.yapeNombre || "";
@@ -353,6 +372,10 @@ function resetForm(){
 async function publishChanges(){
   STATE.site.whatsapp = document.getElementById("site-whatsapp").value.trim();
   STATE.site.email = document.getElementById("site-email").value.trim();
+  STATE.site.promo = {
+    codigo: document.getElementById("promo-codigo").value.trim().toUpperCase(),
+    porcentaje: parseFloat(document.getElementById("promo-porcentaje").value) || 0
+  };
   STATE.site.pagos = {
     yape: document.getElementById("pay-yape").value.trim(),
     yapeNombre: document.getElementById("pay-yape-nombre").value.trim(),

@@ -91,24 +91,30 @@ function renderCartPage(){
     if(i.horario) detalles.push(`🕐 ${i.horario === "9am-1pm" ? "9am – 1pm" : "1pm – 6pm"}`);
     if(i.dedicatoria) detalles.push(`💌 "${i.dedicatoria}"`);
     return `
-    <div class="cart-item">
+    <div class="cart-item-card">
       <img src="${i.img}" alt="${i.nombre}">
-      <div>
-        <div style="font-weight:600;">${i.nombre}</div>
-        <div style="color:#6b5f57;font-size:.9rem;">S/ ${i.precio.toFixed(2)} c/u</div>
-        ${detalles.length ? `<div style="font-size:.8rem;color:var(--sage);margin-top:2px;">${detalles.join(" · ")}</div>` : ""}
+      <div class="cart-item-info">
+        <div class="cart-item-name">${i.nombre}</div>
+        <div class="cart-item-unit">S/ ${i.precio.toFixed(2)} c/u</div>
+        ${detalles.length ? `<div class="cart-item-tags">${detalles.join(" · ")}</div>` : ""}
         <div class="qty">
           <button onclick="updateQty('${cid}',-1)">−</button>
           <span>${i.qty}</span>
           <button onclick="updateQty('${cid}',1)">+</button>
-          <button class="remove-link" onclick="removeFromCart('${cid}')">Eliminar</button>
+          <button class="remove-link" onclick="removeFromCart('${cid}')">🗑 Eliminar</button>
         </div>
       </div>
-      <div style="font-weight:700;color:var(--wine);">S/ ${(i.precio*i.qty).toFixed(2)}</div>
+      <div class="cart-item-subtotal">S/ ${(i.precio*i.qty).toFixed(2)}</div>
     </div>`;
   }).join("");
 
-  const total = cartTotal();
+  const subtotal = cartTotal();
+  const promo = SITE.promo || {};
+  const codigoAplicado = (sessionStorage.getItem("flt_promo") || "").toUpperCase();
+  const promoValida = promo.codigo && codigoAplicado === promo.codigo.toUpperCase();
+  const descuento = promoValida ? subtotal * (promo.porcentaje / 100) : 0;
+  const total = subtotal - descuento;
+
   const pagos = SITE.pagos || {};
   const metodosAlt = [];
   if(pagos.yape) metodosAlt.push({ id:"yape", label:"Yape", num: pagos.yape, titular: pagos.yapeNombre });
@@ -117,12 +123,34 @@ function renderCartPage(){
   if(pagos.bn) metodosAlt.push({ id:"bn", label:"Banco de la Nación", num: pagos.bn, titular: pagos.bnTitular });
   if(pagos.interbank) metodosAlt.push({ id:"interbank", label:"Interbank", num: pagos.interbank, titular: pagos.interbankTitular });
 
+  const miniItemsHTML = cart.map(i => `
+    <div class="mini-order-item">
+      <div class="mini-order-thumb"><img src="${i.img}" alt=""><span class="mini-order-badge">${i.qty}</span></div>
+      <div>
+        <div style="font-weight:600;font-size:.88rem;">${i.nombre}</div>
+        ${i.fecha ? `<div style="font-size:.76rem;color:#6b5f57;">Entrega: ${i.fecha}</div>` : ""}
+        ${i.horario ? `<div style="font-size:.76rem;color:#6b5f57;">Horario: ${i.horario === "9am-1pm" ? "9am – 1pm" : "1pm – 6pm"}</div>` : ""}
+      </div>
+      <div style="margin-left:auto;font-weight:700;color:var(--wine);font-size:.88rem;">S/ ${(i.precio*i.qty).toFixed(2)}</div>
+    </div>`).join("");
+
   container.innerHTML = `
     <div class="cart-layout">
       <div>${itemsHTML}</div>
       <div class="summary">
         <h3>Resumen del pedido</h3>
-        <div style="font-size:.9rem;color:#6b5f57;">Envío: se coordina por WhatsApp según distrito de Tacna.</div>
+        <div class="mini-order-list">${miniItemsHTML}</div>
+
+        <div class="promo-row">
+          <input type="text" id="promo-input" placeholder="Código de descuento" value="${codigoAplicado}" style="text-transform:uppercase;">
+          <button class="mini-btn" onclick="aplicarPromo()">Usar</button>
+        </div>
+        ${promoValida ? `<div style="color:#2c7a3e;font-size:.82rem;margin-top:-8px;margin-bottom:10px;">✓ Código "${promo.codigo}" aplicado (-${promo.porcentaje}%)</div>` : ""}
+        ${codigoAplicado && !promoValida ? `<div style="color:#a12a2a;font-size:.82rem;margin-top:-8px;margin-bottom:10px;">Código no válido</div>` : ""}
+
+        <div class="summary-line"><span>Subtotal</span><span>S/ ${subtotal.toFixed(2)}</span></div>
+        ${promoValida ? `<div class="summary-line" style="color:#2c7a3e;"><span>Descuento</span><span>− S/ ${descuento.toFixed(2)}</span></div>` : ""}
+        <div class="summary-line"><span>Envío</span><span>Se coordina por WhatsApp</span></div>
         <div class="total-row"><span>Total</span><span>S/ ${total.toFixed(2)}</span></div>
 
         <div class="field" style="margin-top:6px;">
@@ -158,6 +186,12 @@ function renderCartPage(){
   window._metodosAlt = metodosAlt;
   window._cartTotal = total;
   renderMetodoPago();
+}
+
+function aplicarPromo(){
+  const val = document.getElementById("promo-input").value.trim().toUpperCase();
+  sessionStorage.setItem("flt_promo", val);
+  renderCartPage();
 }
 
 function selectMetodo(valor){
@@ -203,16 +237,20 @@ async function pagarConMercadoPago(){
   btn.disabled = true;
   btn.textContent = "Redirigiendo a Mercado Pago...";
   try{
+    const promo = SITE.promo || {};
+    const codigoAplicado = (sessionStorage.getItem("flt_promo") || "").toUpperCase();
+    const promoValida = promo.codigo && codigoAplicado === promo.codigo.toUpperCase();
+    const factor = promoValida ? (1 - promo.porcentaje / 100) : 1;
+    const items = cart.map(i => {
+      let title = i.nombre;
+      if(i.fecha) title += ` (Entrega: ${i.fecha}, ${i.horario === "9am-1pm" ? "9am-1pm" : "1pm-6pm"})`;
+      if(promoValida) title += ` [${promo.codigo} -${promo.porcentaje}%]`;
+      return { title, qty: i.qty, price: Math.round(i.precio * factor * 100) / 100 };
+    });
     const res = await fetch("/api/create-preference", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: cart.map(i => {
-          let title = i.nombre;
-          if(i.fecha) title += ` (Entrega: ${i.fecha}, ${i.horario === "9am-1pm" ? "9am-1pm" : "1pm-6pm"})`;
-          return { title, qty: i.qty, price: i.precio };
-        })
-      })
+      body: JSON.stringify({ items })
     });
     if(!res.ok) throw new Error("Error al crear la preferencia de pago");
     const data = await res.json();
