@@ -360,7 +360,7 @@ function filtrarZonas(){
   const resultsEl = document.getElementById("zona-results");
   if(!input || !resultsEl) return;
   const query = input.value.trim().toLowerCase();
-  const zonas = SITE.zonasEnvio || [];
+  const zonas = (SITE.zonasEnvio && SITE.zonasEnvio.length) ? SITE.zonasEnvio : DEFAULT_ZONAS;
   const filtradas = query ? zonas.filter(z => z.distrito.toLowerCase().includes(query)) : zonas;
 
   if(!filtradas.length){

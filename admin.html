@@ -244,7 +244,7 @@ async function loadState(){
   document.getElementById("promo-codigo").value = promo.codigo || "";
   document.getElementById("promo-porcentaje").value = promo.porcentaje || "";
 
-  STATE.site.zonasEnvio = STATE.site.zonasEnvio || [];
+  STATE.site.zonasEnvio = (STATE.site.zonasEnvio && STATE.site.zonasEnvio.length) ? STATE.site.zonasEnvio : JSON.parse(JSON.stringify(DEFAULT_ZONAS));
   const zonasBody = document.getElementById("zonas-table-body");
   zonasBody.innerHTML = STATE.site.zonasEnvio.map((z, idx) => `
     <tr>
