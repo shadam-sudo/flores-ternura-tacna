@@ -139,21 +139,33 @@
         "condolencias"
       ],
       "precio": 149,
-      "img": "ph-flor.svg",
+      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785612201111-Reemplazarlogoeneldiseo4.png",
       "desc": "Arreglo floral blanco en base, para acompañar en momentos difíciles.",
-      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional)."
+      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional).",
+      "imagenes": [
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785612201111-Reemplazarlogoeneldiseo4.png",
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785627918952-Reemplazarlogoeneldiseo6.png"
+      ]
     },
     {
       "id": 5,
       "nombre": "Ramo Nacimiento Bebé",
       "categoria": "flores",
       "ocasiones": [
-        "nacimiento"
+        "aniversario",
+        "cumpleanos",
+        "nacimiento",
+        "amistad",
+        "agradecimiento"
       ],
       "precio": 99,
-      "img": "ph-flor.svg",
+      "img": "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785629227959-Reemplazarlogoeneldiseo8.png",
       "desc": "Flores en tonos pastel con detalle de cigüeña, para celebrar un nacimiento.",
-      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional)."
+      "incluye": "Flores frescas seleccionadas + follaje verde de temporada + papel de envoltura + tarjeta de dedicatoria (opcional).",
+      "imagenes": [
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785629227959-Reemplazarlogoeneldiseo8.png",
+        "https://raw.githubusercontent.com/shadam-sudo/flores-ternura-tacna/main/uploads/1785629232165-Reemplazarlogoeneldiseo7.png"
+      ]
     },
     {
       "id": 6,
