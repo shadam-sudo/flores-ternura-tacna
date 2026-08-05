@@ -116,10 +116,14 @@ Luego: **Deployments → ⋯ → Redeploy**.
 Entra a `admin.html` — la primera sección ahora es **Pedidos**: los que
 necesitan tu atención (pendientes o rechazados sin revisar) aparecen primero.
 Los pedidos de Mercado Pago aparecen solos cuando el cliente paga (verificado
-de verdad, no solo por el redirect). Para Yape/Plin/transferencia, regístralos
-tú mismo con el formulario "Registrar pedido manual" — toma menos de 30
-segundos. Desde cada pedido puedes marcarlo "en preparación" → "entregado", y
-enviar un WhatsApp directo al cliente con el botón de la tarjeta.
+de verdad, no solo por el redirect). Los de Yape/Plin/transferencia también
+aparecen solos, en estado **pendiente**, apenas el cliente hace clic en "Ya
+pagué, confirmar por WhatsApp" en el checkout — te llega el mensaje de
+WhatsApp con la captura Y el pedido ya está en el panel, sin que tengas que
+copiarlo a mano. Cuando confirmes el pago real (viendo la captura), regístralo
+con "Registrar pedido manual" para marcarlo como confirmado. Desde cada
+pedido puedes marcarlo "en preparación" → "entregado", y enviar un WhatsApp
+directo al cliente con el botón de la tarjeta.
 
 **Nota de alcance:** este cambio no toca el archivo huérfano `admin ok.html`
 (un fix de compresión de imágenes que quedó sin aplicar al `admin.html` real)

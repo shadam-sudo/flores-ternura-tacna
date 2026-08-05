@@ -262,22 +262,60 @@ function selectMetodo(valor){
   if(valor === "alt") renderMetodoPago();
 }
 
+// Cada entrada de metodosAlt (yape/plin/bcp/bn/interbank) es una forma
+// distinta de pagar, pero la tabla orders solo distingue 3 métodos —
+// bcp/bn/interbank son todas "transferencia" para efectos de registro.
+const METODO_ALT_A_ENUM = { yape: "yape", plin: "plin", bcp: "transferencia", bn: "transferencia", interbank: "transferencia" };
+
 function renderMetodoPago(){
     const list = document.getElementById("metodos-alt-list");
     if(!list) return;
-    list.innerHTML = (window._metodosAlt || []).map(m => `
-      <div style="background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+    const metodosAlt = window._metodosAlt || [];
+    if(!window._metodoAltSeleccionado && metodosAlt.length) window._metodoAltSeleccionado = metodosAlt[0].id;
+    list.innerHTML = `
+      <p style="font-size:.85rem;font-weight:600;margin-bottom:8px;">¿Con cuál vas a pagar?</p>
+      ${metodosAlt.map(m => `
+      <label style="display:block;background:${window._metodoAltSeleccionado === m.id ? "var(--cream)" : "#fff"};border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;">
+        <input type="radio" name="metodo-alt" value="${m.id}" ${window._metodoAltSeleccionado === m.id ? "checked" : ""} onchange="seleccionarMetodoAlt('${m.id}')">
         <b>${m.label}</b><br>
         <span style="font-family:monospace;font-size:1rem;">${m.num}</span>
         ${m.cci ? `<br><span style="font-size:.8rem;color:#6b5f57;">CCI: ${m.cci}</span>` : ""}
         ${m.titular ? `<br><span style="font-size:.8rem;color:#6b5f57;">A nombre de: ${m.titular}</span>` : ""}
-      </div>`).join("");
+      </label>`).join("")}`;
 }
 
-function confirmarPagoWhatsApp(){
+function seleccionarMetodoAlt(id){
+  window._metodoAltSeleccionado = id;
+  renderMetodoPago();
+}
+
+async function confirmarPagoWhatsApp(){
   const cart = getCart();
   const total = window._cartTotal || cartTotal();
   const zonaSel = getZonaSeleccionada();
+
+  const clienteNombre = (document.getElementById("checkout-nombre")?.value || "").trim();
+  const clienteTelefono = (document.getElementById("checkout-telefono")?.value || "").trim();
+  if(!clienteNombre || !clienteTelefono){
+    alert("Completa tu nombre y WhatsApp antes de confirmar — los necesitamos para registrar tu pedido.");
+    return;
+  }
+  const metodoId = window._metodoAltSeleccionado || (window._metodosAlt || [])[0]?.id;
+  const metodo = METODO_ALT_A_ENUM[metodoId] || "transferencia";
+
+  // Best-effort: si esto falla, igual dejamos que el cliente confirme por
+  // WhatsApp (el canal principal) — el registro automático es una red de
+  // seguridad extra, no debe bloquear la confirmación real al dueño.
+  try{
+    await fetch("/api/public-order", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        cliente_nombre: clienteNombre, cliente_telefono: clienteTelefono, metodo,
+        monto: total, items: cart.map(i => ({ nombre: i.nombre, qty: i.qty }))
+      })
+    });
+  } catch(e){ /* red o servidor caído — no bloquea la confirmación por WhatsApp */ }
+
   const resumen = cart.map(i => `- ${i.nombre} x${i.qty}`).join("%0A");
   const envioLine = zonaSel ? `%0AEnvío a ${zonaSel.distrito}: ${zonaSel.precio > 0 ? "S/ " + zonaSel.precio.toFixed(2) : "Gratis"}` : "";
   const msg = `Hola! Acabo de realizar el pago de mi pedido (S/ ${total.toFixed(2)}):%0A${resumen}${envioLine}%0A%0AAdjunto la captura del pago.`;
