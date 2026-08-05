@@ -269,9 +269,16 @@
     </div>
     <div class="row2">
       <div class="field">
+        <label>Precio de oferta (S/) — opcional, debe ser menor al precio normal</label>
+        <input type="number" id="p-precio-oferta" placeholder="Déjalo vacío si no hay oferta" min="0" step="1">
+      </div>
+      <div class="field">
         <label>Categoría</label>
         <select id="p-categoria"></select>
       </div>
+    </div>
+    <div class="field">
+      <label style="font-weight:400;font-size:.9rem;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="p-destacado"> Mostrar en "Más vendidos" en la portada</label>
     </div>
     <div class="field">
       <label>Fotos del producto (hasta 3, opcionales — la primera se usa como principal)</label>
@@ -624,9 +631,11 @@ function renderTable(){
   body.innerHTML = STATE.products.map(p => `
     <tr>
       <td><img class="thumb" src="${(p.imagenes && p.imagenes[0]) || p.img || 'ph-flor.svg'}" alt=""></td>
-      <td>${p.nombre}</td>
+      <td>${p.nombre}${p.destacado ? ' <span title="Más vendidos" style="font-size:.8rem;">⭐</span>' : ''}</td>
       <td>${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</td>
-      <td>S/ ${Number(p.precio).toFixed(2)}</td>
+      <td>${(p.precio_oferta !== null && p.precio_oferta !== undefined)
+        ? `<span style="text-decoration:line-through;color:#6b5f57;">S/ ${Number(p.precio).toFixed(2)}</span> S/ ${Number(p.precio_oferta).toFixed(2)}`
+        : `S/ ${Number(p.precio).toFixed(2)}`}</td>
       <td>
         <button class="mini-btn" onclick="editProduct(${p.id})">Editar</button>
         <button class="mini-btn danger" onclick="deleteProduct(${p.id})">Eliminar</button>
@@ -702,6 +711,9 @@ function fileToBase64(file){
 function saveProductForm(){
   const nombre = document.getElementById("p-nombre").value.trim();
   const precio = parseFloat(document.getElementById("p-precio").value);
+  const precioOfertaRaw = document.getElementById("p-precio-oferta").value.trim();
+  const precio_oferta = precioOfertaRaw === "" ? null : parseFloat(precioOfertaRaw);
+  const destacado = document.getElementById("p-destacado").checked;
   const categoria = document.getElementById("p-categoria").value;
   const desc = document.getElementById("p-desc").value.trim();
   const incluye = document.getElementById("p-incluye").value.trim();
@@ -709,6 +721,10 @@ function saveProductForm(){
 
   if(!nombre || isNaN(precio)){
     alert("Completa al menos el nombre y el precio.");
+    return;
+  }
+  if(precio_oferta !== null && (isNaN(precio_oferta) || precio_oferta <= 0 || precio_oferta >= precio)){
+    alert("El precio de oferta debe ser mayor a 0 y menor al precio normal.");
     return;
   }
 
@@ -719,12 +735,13 @@ function saveProductForm(){
 
   if(editingId){
     const p = STATE.products.find(x => x.id === editingId);
-    p.nombre = nombre; p.precio = precio; p.categoria = categoria; p.desc = desc; p.incluye = incluye; p.ocasiones = ocasiones;
+    p.nombre = nombre; p.precio = precio; p.precio_oferta = precio_oferta; p.destacado = destacado;
+    p.categoria = categoria; p.desc = desc; p.incluye = incluye; p.ocasiones = ocasiones;
     if(imagenes.length) { p.imagenes = imagenes; p.img = imagenes[0]; }
   } else {
     const nextId = STATE.products.length ? Math.max(...STATE.products.map(p=>p.id)) + 1 : 1;
     STATE.products.push({
-      id: nextId, nombre, precio, categoria, desc, incluye, ocasiones,
+      id: nextId, nombre, precio, precio_oferta, destacado, categoria, desc, incluye, ocasiones,
       imagenes: imagenes.length ? imagenes : ["ph-flor.svg"],
       img: imagenes[0] || "ph-flor.svg"
     });
@@ -743,6 +760,8 @@ function editProduct(id){
   document.getElementById("form-title").textContent = "Editar producto";
   document.getElementById("p-nombre").value = p.nombre;
   document.getElementById("p-precio").value = p.precio;
+  document.getElementById("p-precio-oferta").value = (p.precio_oferta !== null && p.precio_oferta !== undefined) ? p.precio_oferta : "";
+  document.getElementById("p-destacado").checked = !!p.destacado;
   document.getElementById("p-categoria").value = p.categoria;
   document.getElementById("p-desc").value = p.desc || "";
   document.getElementById("p-incluye").value = p.incluye || "";
@@ -773,6 +792,8 @@ function resetForm(){
   document.getElementById("form-title").textContent = "Agregar producto";
   document.getElementById("p-nombre").value = "";
   document.getElementById("p-precio").value = "";
+  document.getElementById("p-precio-oferta").value = "";
+  document.getElementById("p-destacado").checked = false;
   document.getElementById("p-desc").value = "";
   document.getElementById("p-incluye").value = "";
   document.getElementById("p-img-status").textContent = "";
