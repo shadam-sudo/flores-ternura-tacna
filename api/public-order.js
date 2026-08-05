@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     const rows = await sql`
       INSERT INTO orders (cliente_nombre, cliente_telefono, items, monto, metodo, estado, dedupe_key)
       VALUES (${cliente_nombre}, ${telefono}, ${JSON.stringify(items || [])}::jsonb, ${Number(monto)}, ${metodo}, 'pendiente', ${dedupeKey})
-      ON CONFLICT (dedupe_key) DO NOTHING
+      ON CONFLICT (dedupe_key) WHERE dedupe_key IS NOT NULL DO NOTHING
       RETURNING id;
     `;
     res.status(200).json({ ok: true, deduped: rows.length === 0 });

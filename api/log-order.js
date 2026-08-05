@@ -47,11 +47,15 @@ module.exports = async (req, res) => {
   try {
     // Upsert atómico: ON CONFLICT DO NOTHING contra la restricción UNIQUE
     // de dedupe_key cierra la condición de carrera de dos solicitudes casi
-    // simultáneas — un check-then-insert por separado no la cierra.
+    // simultáneas — un check-then-insert por separado no la cierra. El
+    // WHERE debe repetir el predicado del índice parcial en schema.sql
+    // (`WHERE dedupe_key IS NOT NULL`) — sin él, Postgres no puede usar
+    // un índice parcial como árbitro y el INSERT falla siempre, no solo
+    // en los duplicados.
     const rows = await sql`
       INSERT INTO orders (cliente_nombre, cliente_telefono, items, monto, metodo, estado, dedupe_key)
       VALUES (${cliente_nombre}, ${telefono}, ${JSON.stringify(items || [])}::jsonb, ${Number(monto)}, ${metodo}, 'confirmado', ${dedupeKey})
-      ON CONFLICT (dedupe_key) DO NOTHING
+      ON CONFLICT (dedupe_key) WHERE dedupe_key IS NOT NULL DO NOTHING
       RETURNING id;
     `;
     res.status(200).json({ ok: true, deduped: rows.length === 0 });
