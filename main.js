@@ -192,6 +192,15 @@ function renderCartPage(){
         <div class="total-row"><span>Total</span><span>S/ ${total.toFixed(2)}</span></div>
 
         <div class="field" style="margin-top:6px;">
+          <label>Tu nombre</label>
+          <input type="text" id="checkout-nombre" placeholder="Nombre y apellido" value="${sessionStorage.getItem("flt_checkout_nombre") || ""}" oninput="sessionStorage.setItem('flt_checkout_nombre', this.value)">
+        </div>
+        <div class="field">
+          <label>Tu WhatsApp (para avisarte del estado de tu pedido)</label>
+          <input type="tel" id="checkout-telefono" placeholder="987 654 321" value="${sessionStorage.getItem("flt_checkout_telefono") || ""}" oninput="sessionStorage.setItem('flt_checkout_telefono', this.value)">
+        </div>
+
+        <div class="field" style="margin-top:6px;">
           <label>Método de pago</label>
           <div class="pago-option selected" id="opt-mp" onclick="selectMetodo('mp')">
             <div class="pago-option-head">
@@ -282,6 +291,14 @@ async function pagarConMercadoPago(){
   const btn = document.getElementById("pay-btn");
   const cart = getCart();
   if(!cart.length) return;
+
+  const clienteNombre = (document.getElementById("checkout-nombre")?.value || "").trim();
+  const clienteTelefono = (document.getElementById("checkout-telefono")?.value || "").trim();
+  if(!clienteNombre || !clienteTelefono){
+    alert("Completa tu nombre y WhatsApp antes de pagar — los necesitamos para avisarte del estado de tu pedido.");
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = "Redirigiendo a Mercado Pago...";
   try{
@@ -302,7 +319,7 @@ async function pagarConMercadoPago(){
     const res = await fetch("/api/create-preference", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items })
+      body: JSON.stringify({ items, cliente_nombre: clienteNombre, cliente_telefono: clienteTelefono })
     });
     if(!res.ok) throw new Error("Error al crear la preferencia de pago");
     const data = await res.json();

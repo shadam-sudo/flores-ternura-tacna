@@ -30,6 +30,27 @@
   #status-msg.ok{display:block;background:#e7f3e5;color:#2c5a2a;}
   #status-msg.err{display:block;background:#fbe6e6;color:#a12a2a;}
   #panel{display:none;}
+
+  /* --- Pedidos --- */
+  .order-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.75rem;font-weight:600;}
+  .order-badge.pendiente{background:#fff3cd;color:#8a6d1a;}
+  .order-badge.confirmado{background:#d1e7ff;color:#2255a4;}
+  .order-badge.en_preparacion{background:#e2d9f3;color:#5a3a94;}
+  .order-badge.entregado{background:#d4edda;color:#256a34;}
+  .order-badge.rechazado{background:#fbe6e6;color:#a12a2a;}
+  .order-badge.reembolsado{background:#e5e5e5;color:#555;}
+  .order-badge.error{background:#fde2c8;color:#9a5a10;}
+  .order-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width: 700px){ .order-cards{grid-template-columns:1fr;} }
+  .order-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fffdfb;}
+  .order-card .top{display:flex;justify-content:space-between;align-items:flex-start;font-size:.92rem;font-weight:600;}
+  .order-card .meta{font-size:.8rem;color:#6b5f57;margin:6px 0;}
+  .order-card .actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .order-skeleton{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .order-skeleton .sk{height:110px;border-radius:10px;background:linear-gradient(90deg,#f3e7dc 25%,#f8f0e8 50%,#f3e7dc 75%);background-size:200% 100%;animation:sk-shimmer 1.4s infinite;}
+  @keyframes sk-shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+  .order-empty{text-align:center;padding:30px 10px;color:#6b5f57;}
+  .order-error-banner{background:#fde2c8;color:#7a4408;padding:10px 12px;border-radius:8px;font-size:.85rem;margin-bottom:12px;}
 </style>
 </head>
 <body>
@@ -50,6 +71,48 @@
 </div>
 
 <div id="panel" class="admin-wrap">
+
+  <div class="admin-card">
+    <h2>Pedidos <button class="mini-btn" style="float:right;" onclick="loadOrders()">Actualizar</button></h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
+      Todos los pedidos (Mercado Pago, Yape, Plin, transferencia) en un solo lugar.
+      Los que necesitan tu atención aparecen primero.
+    </p>
+    <div id="orders-error-banner" class="order-error-banner" style="display:none;"></div>
+    <div id="orders-container"><div class="order-skeleton"><div class="sk"></div><div class="sk"></div></div></div>
+
+    <h3 style="margin-top:22px;font-size:1rem;">Registrar pedido manual (Yape / Plin / Transferencia)</h3>
+    <div class="row2">
+      <div class="field">
+        <label>Nombre del cliente</label>
+        <input type="text" id="mo-nombre" placeholder="Rosa Quispe">
+      </div>
+      <div class="field">
+        <label>WhatsApp del cliente</label>
+        <input type="tel" id="mo-telefono" placeholder="987 654 321">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Monto (S/)</label>
+        <input type="number" id="mo-monto" placeholder="89" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <label>Método</label>
+        <select id="mo-metodo">
+          <option value="yape">Yape</option>
+          <option value="plin">Plin</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>¿Qué pidió? (opcional)</label>
+      <input type="text" id="mo-items" placeholder="Ramo de 12 rosas rojas">
+    </div>
+    <button class="btn btn-primary" onclick="submitManualOrder()" id="mo-submit-btn">Registrar pedido</button>
+    <div id="mo-status" style="font-size:.85rem;margin-top:8px;"></div>
+  </div>
 
   <div class="admin-card">
     <h2>Datos de contacto</h2>
@@ -321,6 +384,149 @@ async function loadState(){
   ocWrap.innerHTML = OCASIONES.map(o => `<label><input type="checkbox" value="${o.key}"> ${o.label}</label>`).join("");
 
   renderTable();
+  loadOrders();
+}
+
+// ---------- Pedidos ----------
+const ESTADO_LABELS = {
+  pendiente: "Pendiente", confirmado: "Confirmado", en_preparacion: "En preparación",
+  entregado: "Entregado", rechazado: "Rechazado", reembolsado: "Reembolsado"
+};
+
+function fmtFechaPeru(iso){
+  try{
+    return new Date(iso).toLocaleString("es-PE", { timeZone: "America/Lima", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+  } catch { return iso; }
+}
+
+// Los pedidos traen cliente_nombre, cliente_telefono e items desde el
+// checkout público (main.js) sin ninguna sanitización previa — sin escapar
+// aquí, un nombre malicioso en el checkout se ejecuta como HTML/JS en esta
+// página, que tiene la contraseña del panel en scope.
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+async function loadOrders(){
+  const container = document.getElementById("orders-container");
+  const banner = document.getElementById("orders-error-banner");
+  banner.style.display = "none";
+  container.innerHTML = `<div class="order-skeleton"><div class="sk"></div><div class="sk"></div></div>`;
+  try{
+    const res = await fetch("/api/list-orders", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, limit: 50 })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      banner.textContent = "Error al cargar pedidos: " + (data.error || "desconocido");
+      banner.style.display = "block";
+      container.innerHTML = "";
+      return;
+    }
+    renderOrders(data.orders || []);
+  } catch(e){
+    banner.textContent = "Error de conexión al cargar pedidos.";
+    banner.style.display = "block";
+    container.innerHTML = "";
+  }
+}
+
+function renderOrders(orders){
+  const container = document.getElementById("orders-container");
+  if(!orders.length){
+    container.innerHTML = `<div class="order-empty">Aún no tienes pedidos.</div>`;
+    return;
+  }
+  container.innerHTML = `<div class="order-cards">${orders.map(orderCardHTML).join("")}</div>`;
+}
+
+function orderCardHTML(o){
+  const items = Array.isArray(o.items) ? o.items : [];
+  const primerItem = escapeHtml(items[0] ? (items[0].nombre || items[0].title || "") : "");
+  const masItems = items.length > 1 ? ` +${items.length - 1} más` : "";
+  const badgeClass = o.verification_error ? "error" : o.estado;
+  const badgeLabel = o.verification_error ? "Verificación pendiente por error" : (ESTADO_LABELS[o.estado] || o.estado);
+  const clienteNombre = escapeHtml(o.cliente_nombre || "Sin nombre");
+  const clienteTelefono = escapeHtml(o.cliente_telefono || "");
+  const metodo = escapeHtml(o.metodo);
+  // Pedidos de Mercado Pago pueden traer un teléfono que no se pudo
+  // normalizar (número extranjero, formato raro) — en vez de un botón de
+  // WhatsApp roto, simplemente no lo mostramos para esos casos.
+  const waHref = /^51\d{9}$/.test(o.cliente_telefono || "") ? `https://wa.me/${o.cliente_telefono}` : null;
+
+  let actions = "";
+  if(o.estado === "confirmado"){
+    actions += `<button class="mini-btn" onclick="advanceOrder('${o.id}','en_preparacion')">Marcar en preparación</button>`;
+  }
+  if(o.estado === "en_preparacion"){
+    actions += `<button class="mini-btn" onclick="advanceOrder('${o.id}','entregado')">Marcar entregado</button>`;
+  }
+  if(waHref){
+    actions += `<a class="mini-btn" href="${waHref}" target="_blank" rel="noopener">WhatsApp</a>`;
+  }
+
+  return `
+    <div class="order-card">
+      <div class="top"><span>${clienteNombre}</span><span>S/ ${Number(o.monto).toFixed(2)}</span></div>
+      <div class="meta">${metodo} · ${fmtFechaPeru(o.fecha)}${clienteTelefono ? " · " + clienteTelefono : ""}</div>
+      ${primerItem ? `<div class="meta">${primerItem}${masItems}</div>` : ""}
+      <span class="order-badge ${badgeClass}">${badgeLabel}</span>
+      <div class="actions">${actions}</div>
+    </div>`;
+}
+
+async function advanceOrder(id, nuevoEstado){
+  try{
+    const res = await fetch("/api/update-order-status", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, id, nuevo_estado: nuevoEstado })
+    });
+    const data = await res.json();
+    if(!data.ok){ alert("Error: " + (data.error || "no se pudo actualizar")); return; }
+    loadOrders();
+  } catch(e){ alert("Error de conexión al actualizar el pedido."); }
+}
+
+async function submitManualOrder(){
+  const nombre = document.getElementById("mo-nombre").value.trim();
+  const telefono = document.getElementById("mo-telefono").value.trim();
+  const monto = document.getElementById("mo-monto").value;
+  const metodo = document.getElementById("mo-metodo").value;
+  const itemTexto = document.getElementById("mo-items").value.trim();
+  const statusEl = document.getElementById("mo-status");
+
+  if(!nombre || !telefono || !monto){
+    statusEl.textContent = "Completa nombre, WhatsApp y monto.";
+    return;
+  }
+
+  const btn = document.getElementById("mo-submit-btn");
+  btn.disabled = true;
+  statusEl.textContent = "Guardando...";
+  try{
+    const res = await fetch("/api/log-order", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        password: PASSWORD, cliente_nombre: nombre, cliente_telefono: telefono,
+        monto: parseFloat(monto), metodo, items: itemTexto ? [{ nombre: itemTexto }] : []
+      })
+    });
+    const data = await res.json();
+    if(data.ok){
+      statusEl.textContent = "✓ Pedido registrado.";
+      document.getElementById("mo-nombre").value = "";
+      document.getElementById("mo-telefono").value = "";
+      document.getElementById("mo-monto").value = "";
+      document.getElementById("mo-items").value = "";
+      loadOrders();
+    } else {
+      statusEl.textContent = "Error: " + (data.error || "no se pudo guardar");
+    }
+  } catch(e){
+    statusEl.textContent = "Error de conexión al guardar.";
+  }
+  btn.disabled = false;
 }
 
 function renderTable(){
