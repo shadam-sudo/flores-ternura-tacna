@@ -26,7 +26,9 @@ function addToCart(productId, qty = 1, opciones = {}){
     cart.push({
       id: product.id,
       nombre: product.nombre,
-      precio: product.precio,
+      // Precio de oferta si está activo — nunca el precio original cuando
+      // hay uno, o el carrito/checkout/Mercado Pago cobrarían de más.
+      precio: product.precio_oferta || product.precio,
       img: product.img,
       qty,
       dedicatoria: opciones.dedicatoria || "",
