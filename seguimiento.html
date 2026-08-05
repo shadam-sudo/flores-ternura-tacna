@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguimiento de tu pedido | Flores & Ternura Tacna</title>
+<link rel="icon" type="image/png" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .track-wrap{max-width:640px;margin:0 auto;padding:60px 24px 80px;}
+  .track-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:28px;}
+  .track-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;}
+  .track-monto{font-weight:700;color:var(--wine);font-size:1.1rem;white-space:nowrap;}
+  .track-meta{color:#6b5f57;font-size:.88rem;margin-bottom:24px;}
+  .track-alert{border-radius:10px;padding:14px 16px;font-size:.92rem;margin-bottom:20px;}
+  .track-alert.rechazado{background:#fbe6e6;color:#a12a2a;}
+  .track-alert.cancelado{background:#f0dede;color:#7a3a3a;}
+  .track-alert.reembolsado{background:#e5e5e5;color:#555;}
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:14px;position:relative;}
+  .step-dot-col{display:flex;flex-direction:column;align-items:center;}
+  .step-dot{width:18px;height:18px;border-radius:50%;background:var(--line);border:2px solid var(--line);flex-shrink:0;}
+  .step-line{width:2px;flex:1;background:var(--line);min-height:28px;}
+  .step:last-child .step-line{display:none;}
+  .step-label{padding-bottom:28px;font-size:.95rem;color:#9c8f86;}
+  .step.done .step-dot{background:var(--sage);border-color:var(--sage);}
+  .step.done .step-line{background:var(--sage);}
+  .step.done .step-label{color:var(--ink);font-weight:600;}
+  .step.current .step-dot{background:var(--wine);border-color:var(--wine);box-shadow:0 0 0 4px var(--rose);}
+  .step.current .step-label{color:var(--wine);font-weight:700;}
+  .track-items{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);}
+  .track-item{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+  .track-item img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--rose);flex-shrink:0;}
+  .track-item-name{font-size:.9rem;}
+  .track-dedicatoria{font-size:.82rem;color:var(--wine);font-style:italic;margin-top:2px;}
+  .track-refresh{display:block;margin:20px auto 0;}
+  .track-empty{text-align:center;padding:60px 24px;color:#6b5f57;}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap nav">
+    <a href="index.html" class="logo"><img src="logo.png" alt="Flores & Ternura Tacna" class="logo-icon">Flores <span>&</span> Ternura <span>Tacna</span></a>
+  </div>
+</header>
+<div class="ribbon"></div>
+<main class="track-wrap">
+  <h1 style="text-align:center;margin-bottom:28px;">Seguimiento de tu pedido</h1>
+  <div id="track-container">
+    <div class="track-empty">Cargando...</div>
+  </div>
+</main>
+<script>
+const ESTADO_LABELS = {
+  pendiente: "Pendiente", confirmado: "Aprobado / Confirmado", recibido: "Recibido",
+  en_preparacion: "En elaboración", en_camino: "En camino", entregado: "Entregado",
+  rechazado: "Rechazado", cancelado: "Cancelado", reembolsado: "Reembolsado"
+};
+const ESTADO_SECUENCIA = ["pendiente", "confirmado", "recibido", "en_preparacion", "en_camino", "entregado"];
+const ALERTAS = {
+  rechazado: "Tu pago no pudo ser confirmado. Si crees que es un error, escríbenos por WhatsApp.",
+  cancelado: "Este pedido fue cancelado. Si tienes dudas, escríbenos por WhatsApp.",
+  reembolsado: "Este pedido fue reembolsado.",
+};
+
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+function fmtFechaPeru(iso){
+  try{
+    return new Date(iso).toLocaleString("es-PE", { timeZone: "America/Lima", day:"2-digit", month:"long", hour:"2-digit", minute:"2-digit" });
+  } catch { return iso; }
+}
+
+function stepsHTML(estadoActual){
+  const idxActual = ESTADO_SECUENCIA.indexOf(estadoActual);
+  return ESTADO_SECUENCIA.map((estado, i) => {
+    const cls = i < idxActual ? "done" : (i === idxActual ? "current" : "");
+    return `
+      <div class="step ${cls}">
+        <div class="step-dot-col"><div class="step-dot"></div><div class="step-line"></div></div>
+        <div class="step-label">${ESTADO_LABELS[estado]}</div>
+      </div>`;
+  }).join("");
+}
+
+function itemsHTML(items){
+  if(!Array.isArray(items) || !items.length) return "";
+  return `<div class="track-items">${items.map(i => `
+    <div class="track-item">
+      ${i.img ? `<img src="${escapeHtml(i.img)}" alt="" loading="lazy">` : ""}
+      <div>
+        <div class="track-item-name">${escapeHtml(i.nombre || i.title || "")}${i.qty > 1 ? ` x${i.qty}` : ""}</div>
+        ${i.dedicatoria ? `<div class="track-dedicatoria">💌 "${escapeHtml(i.dedicatoria)}"</div>` : ""}
+      </div>
+    </div>`).join("")}</div>`;
+}
+
+async function cargarPedido(){
+  const container = document.getElementById("track-container");
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if(!id){
+    container.innerHTML = `<div class="track-empty">Falta el enlace completo de tu pedido — revisa el link que te enviamos por WhatsApp.</div>`;
+    return;
+  }
+  container.innerHTML = `<div class="track-empty">Cargando...</div>`;
+  try{
+    const res = await fetch(`/api/order-status?id=${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if(!data.ok){
+      container.innerHTML = `<div class="track-empty">No encontramos ese pedido. Revisa el link que te enviamos por WhatsApp.</div>`;
+      return;
+    }
+    const o = data.order;
+    const esAlterno = ALERTAS[o.estado];
+    container.innerHTML = `
+      <div class="track-card">
+        <div class="track-header">
+          <div><strong>Pedido</strong></div>
+          <div class="track-monto">S/ ${Number(o.monto).toFixed(2)}</div>
+        </div>
+        <div class="track-meta">${escapeHtml(o.metodo)} · ${fmtFechaPeru(o.fecha)}</div>
+        ${esAlterno ? `<div class="track-alert ${o.estado}">${esAlterno}</div>` : `<div class="steps">${stepsHTML(o.estado)}</div>`}
+        ${itemsHTML(o.items)}
+      </div>
+      <button class="btn btn-outline track-refresh" onclick="cargarPedido()">Actualizar</button>`;
+  } catch(e){
+    container.innerHTML = `<div class="track-empty">Error de conexión. Intenta de nuevo en un momento.</div>`;
+  }
+}
+
+cargarPedido();
+</script>
+</body>
+</html>

@@ -7,17 +7,26 @@ const { MercadoPagoConfig, Preference } = require("mercadopago");
 const MP_ITEMS_METADATA_BUDGET = 1000;
 const DEDICATORIA_METADATA_MAX = 140;
 
+// Recorta en niveles cuando el metadata no entra en el presupuesto de MP —
+// nombre/qty siempre se quedan (es lo mínimo para reconocer el pedido);
+// dedicatoria se sacrifica primero, img después, antes de llegar a un
+// slice crudo que dejaría JSON inválido.
 function buildMpItemsMetadata(items) {
-  const withDedicatoria = items.map((i) => ({
-    nombre: i.title,
-    qty: i.qty,
-    ...(i.dedicatoria ? { dedicatoria: String(i.dedicatoria).slice(0, DEDICATORIA_METADATA_MAX) } : {}),
-  }));
-  const full = JSON.stringify(withDedicatoria);
-  if (full.length <= MP_ITEMS_METADATA_BUDGET) return full;
+  const base = (i) => ({ nombre: i.title, qty: i.qty });
+  const withImg = (i) => (i.img ? { img: i.img } : {});
+  const withDedicatoria = (i) => (i.dedicatoria ? { dedicatoria: String(i.dedicatoria).slice(0, DEDICATORIA_METADATA_MAX) } : {});
 
-  const withoutDedicatoria = JSON.stringify(items.map((i) => ({ nombre: i.title, qty: i.qty })));
-  return withoutDedicatoria.slice(0, MP_ITEMS_METADATA_BUDGET);
+  const tiers = [
+    items.map((i) => ({ ...base(i), ...withDedicatoria(i), ...withImg(i) })),
+    items.map((i) => ({ ...base(i), ...withImg(i) })),
+    items.map(base),
+  ];
+
+  for (const tier of tiers) {
+    const json = JSON.stringify(tier);
+    if (json.length <= MP_ITEMS_METADATA_BUDGET) return json;
+  }
+  return JSON.stringify(items.map(base)).slice(0, MP_ITEMS_METADATA_BUDGET);
 }
 
 module.exports = async (req, res) => {
