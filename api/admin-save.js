@@ -13,6 +13,17 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // No confiar solo en la validación del formulario del panel — un precio
+  // de oferta mayor o igual al precio normal (o negativo) sería un precio
+  // "de oferta" que en realidad cobra más, o no tiene sentido.
+  for (const p of products || []) {
+    if (p.precio_oferta === null || p.precio_oferta === undefined) continue;
+    if (typeof p.precio_oferta !== "number" || p.precio_oferta <= 0 || p.precio_oferta >= p.precio) {
+      res.status(400).json({ error: `Precio de oferta inválido en "${p.nombre || "producto sin nombre"}" — debe ser mayor a 0 y menor al precio normal.` });
+      return;
+    }
+  }
+
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPO;       // ej: "shadam-sudo/flores-ternura-tacna"
   const branch = process.env.GITHUB_BRANCH || "main";
