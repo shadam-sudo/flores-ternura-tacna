@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { items } = req.body;
+    const { items, cliente_nombre, cliente_telefono } = req.body;
     if (!Array.isArray(items) || items.length === 0) {
       res.status(400).json({ error: "El carrito está vacío." });
       return;
@@ -28,6 +28,11 @@ module.exports = async (req, res) => {
     const client = new MercadoPagoConfig({ accessToken });
     const preference = new Preference(client);
 
+    // metadata viaja de la preferencia al pago — el webhook lo usa para
+    // reconstruir el pedido completo (nombre, teléfono, ítems) sin tener
+    // que consultar nada más. Mercado Pago solo devuelve datos del pagador
+    // (email, nombre de la tarjeta), no el teléfono de contacto ni el
+    // detalle exacto del pedido que necesita el panel.
     const result = await preference.create({
       body: {
         items: items.map((i) => ({
@@ -42,6 +47,11 @@ module.exports = async (req, res) => {
           pending: `${siteUrl}/carrito.html`,
         },
         auto_return: "approved",
+        metadata: {
+          cliente_nombre: String(cliente_nombre || "").slice(0, 200),
+          cliente_telefono: String(cliente_telefono || "").slice(0, 20),
+          items: JSON.stringify(items.map((i) => ({ nombre: i.title, qty: i.qty }))).slice(0, 1000),
+        },
       },
     });
 
