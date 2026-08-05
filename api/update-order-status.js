@@ -1,15 +1,20 @@
-// Fase 2: avanzar el estado de cumplimiento de un pedido (confirmado ->
-// en_preparación -> entregado). Estos son pasos manuales del dueño, no
-// eventos de pago — por eso este endpoint solo permite esas dos transiciones,
-// nunca escribe estados de pago (confirmado/rechazado/reembolsado), que
-// siguen siendo exclusivos del webhook.
+// Cambia el estado de un pedido desde el panel admin — flujo completo
+// (pendiente -> confirmado -> recibido -> en_preparacion -> en_camino ->
+// entregado, más rechazado/cancelado/reembolsado como alternos). A
+// diferencia de la versión anterior (solo 2 transiciones fijas), esto
+// acepta cualquier estado válido: el dueño puede saltar pasos, retroceder,
+// o reactivar un pedido rechazado/cancelado — es un panel de un solo admin
+// autenticado, no hace falta una máquina de estados estricta del lado del
+// servidor. `confirmado`/`rechazado`/`reembolsado` también los puede
+// escribir el webhook de MP automáticamente (ver mp-webhook.js) — ambos
+// caminos escriben la misma columna sin conflicto.
 const { sql } = require("../lib/db");
 const { checkRateLimit } = require("../lib/rate-limit");
 
-const ALLOWED_TRANSITIONS = {
-  en_preparacion: ["confirmado"],
-  entregado: ["en_preparacion"],
-};
+const VALID_ESTADOS = [
+  "pendiente", "confirmado", "recibido", "en_preparacion",
+  "en_camino", "entregado", "rechazado", "cancelado", "reembolsado",
+];
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -31,19 +36,17 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const requiredFrom = ALLOWED_TRANSITIONS[nuevo_estado];
-  if (!id || !requiredFrom) {
-    res.status(400).json({ error: "Transición de estado inválida." });
+  if (!id || !VALID_ESTADOS.includes(nuevo_estado)) {
+    res.status(400).json({ error: "Estado inválido." });
     return;
   }
 
   try {
     const result = await sql`
-      UPDATE orders SET estado = ${nuevo_estado}
-      WHERE id = ${id} AND estado = ANY(${requiredFrom});
+      UPDATE orders SET estado = ${nuevo_estado} WHERE id = ${id};
     `;
     if (!result.count) {
-      res.status(409).json({ error: "El pedido ya no está en el estado esperado — refresca la vista." });
+      res.status(404).json({ error: "Pedido no encontrado." });
       return;
     }
     res.status(200).json({ ok: true });

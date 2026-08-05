@@ -15,8 +15,16 @@ CREATE TABLE IF NOT EXISTS orders (
   monto              numeric(10,2) NOT NULL,
   metodo             text NOT NULL CHECK (metodo IN ('mercadopago', 'yape', 'plin', 'transferencia')),
   mp_payment_id      text UNIQUE,             -- solo pedidos de mercadopago
+  -- Si ya ejecutaste una versión anterior de este schema (el CHECK solo
+  -- tiene 6 valores: pendiente/confirmado/en_preparacion/entregado/
+  -- rechazado/reembolsado), este CREATE TABLE IF NOT EXISTS no lo va a
+  -- actualizar solo — corre esto una vez primero:
+  --   ALTER TABLE orders DROP CONSTRAINT orders_estado_check;
+  --   ALTER TABLE orders ADD CONSTRAINT orders_estado_check CHECK (
+  --     estado IN ('pendiente','confirmado','recibido','en_preparacion','en_camino','entregado','rechazado','cancelado','reembolsado')
+  --   );
   estado             text NOT NULL DEFAULT 'pendiente'
-                       CHECK (estado IN ('pendiente','confirmado','en_preparacion','entregado','rechazado','reembolsado')),
+                       CHECK (estado IN ('pendiente','confirmado','recibido','en_preparacion','en_camino','entregado','rechazado','cancelado','reembolsado')),
   verification_error boolean NOT NULL DEFAULT false, -- true = la API de Pagos de MP falló al verificar, requiere revisión manual
   dedupe_key         text,                    -- solo pedidos manuales: hash(telefono+monto+ventana de tiempo)
   created_at         timestamptz NOT NULL DEFAULT now()

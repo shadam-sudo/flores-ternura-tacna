@@ -154,12 +154,24 @@ module.exports = async (req, res) => {
           WHEN EXCLUDED.estado IS DISTINCT FROM orders.estado THEN true
           ELSE orders.verification_error
         END
-      WHERE orders.estado NOT IN ('en_preparacion', 'entregado')
-        AND (
-          CASE EXCLUDED.estado WHEN 'pendiente' THEN 1 WHEN 'confirmado' THEN 2 WHEN 'rechazado' THEN 3 WHEN 'reembolsado' THEN 3 ELSE 0 END
-          >=
-          CASE orders.estado WHEN 'pendiente' THEN 1 WHEN 'confirmado' THEN 2 WHEN 'rechazado' THEN 3 WHEN 'reembolsado' THEN 3 ELSE 0 END
-        );
+      WHERE (
+          -- Mientras el pedido sigue en fase de pago (pendiente/confirmado,
+          -- sin avance manual todavía), una notificación reintentada no
+          -- puede degradar el estado (confirmado -> pendiente).
+          orders.estado IN ('pendiente', 'confirmado')
+          AND (
+            CASE EXCLUDED.estado WHEN 'pendiente' THEN 1 WHEN 'confirmado' THEN 2 WHEN 'rechazado' THEN 3 WHEN 'reembolsado' THEN 3 ELSE 0 END
+            >=
+            CASE orders.estado WHEN 'pendiente' THEN 1 WHEN 'confirmado' THEN 2 ELSE 0 END
+          )
+        )
+        -- Una vez que el dueño avanza el pedido manualmente (recibido,
+        -- en_preparacion, en_camino, entregado, cancelado), un reintento
+        -- del webhook con 'pendiente'/'confirmado' ya no debe pisarlo —
+        -- perdería el progreso del panel. rechazado/reembolsado sí siguen
+        -- aplicando siempre: un rechazo o reembolso real de MP importa sin
+        -- importar qué tan avanzado esté el pedido.
+        OR EXCLUDED.estado IN ('rechazado', 'reembolsado');
     `;
   } catch (err) {
     console.error("mp-webhook: fallo al guardar el pedido", dataId, err.message);
