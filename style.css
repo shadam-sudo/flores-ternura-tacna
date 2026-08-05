@@ -6,7 +6,7 @@
   --wine-dark: #8A3155;
   --rose: #F2DCE6;
   --sage: #3E7A64;
-  --gold: #E0A33A;
+  --gold: #996A1A;
   --ink: #2B2320;
   --line: #EDE0E4;
   --radius: 14px;
@@ -288,7 +288,7 @@ section{padding:56px 0;}
   background:var(--wine); color:#fff; font-weight:700; cursor:pointer; transition:background .15s ease, transform .1s ease;
 }
 .pd-cta:hover{background:var(--wine-dark); transform:translateY(-1px);}
-.pd-note{font-size:.8rem; color:#9c8f86; text-align:center; margin-top:10px;}
+.pd-note{font-size:.8rem; color:#6b5f57; text-align:center; margin-top:10px;}
 .acc-card{background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; margin-top:14px;}
 .acc-toggle{
   width:100%; text-align:left; background:none; border:none; padding:18px 20px; cursor:pointer;

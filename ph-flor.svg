@@ -6,9 +6,9 @@
     <ellipse cx="29" cy="45" rx="34" ry="46" fill="#B5426F" transform="rotate(144)"/>
     <ellipse cx="-29" cy="45" rx="34" ry="46" fill="#C97896" transform="rotate(216)"/>
     <ellipse cx="-47" cy="-20" rx="34" ry="46" fill="#B5426F" transform="rotate(288)"/>
-    <circle cx="0" cy="0" r="26" fill="#E0A33A"/>
+    <circle cx="0" cy="0" r="26" fill="#996A1A"/>
     <path d="M0,60 C -10,120 -6,160 -18,200" stroke="#3E7A64" stroke-width="8" fill="none"/>
     <path d="M-8,140 C -30,150 -42,145 -55,160" stroke="#3E7A64" stroke-width="7" fill="none"/>
   </g>
-  <text x="200" y="370" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#9c8f86">foto próximamente</text>
+  <text x="200" y="370" text-anchor="middle" font-family="'Work Sans', Arial, sans-serif" font-size="16" fill="#6b5f57">foto próximamente</text>
 </svg>
