@@ -127,8 +127,53 @@ enviar un WhatsApp directo al cliente con el botón de la tarjeta.
 
 ---
 
+## Nuevo: Fotos de productos en Supabase Storage
+
+Las fotos que subas desde ahora en adelante se guardan en Supabase Storage en
+vez de commitearse al repo de GitHub — más rápido y no infla el historial de
+git con un commit por foto. **Las fotos que ya subiste antes siguen
+funcionando igual**, sirviéndose desde GitHub; esto solo cambia las nuevas.
+
+### 1. Sube estos archivos nuevos/actualizados
+
+Nuevo en `lib/`: `supabase-storage.js`. Actualizados: `api/admin-upload-image.js`,
+`admin.html`, `package.json`.
+
+### 2. Crea el bucket en Supabase
+
+1. En tu proyecto de Supabase → **Storage** → **New bucket**.
+2. Nombre: `product-images`. Marca **Public bucket** (para que las fotos se
+   vean en tu catálogo sin necesitar autenticación, igual que hoy).
+3. No hace falta crear ninguna política — la subida de fotos se hace con la
+   clave `service_role` desde el servidor (nunca desde el navegador), así que
+   no depende de las políticas de acceso público del bucket.
+
+### 3. Agrega estas variables de entorno en Vercel
+
+| Variable | Valor |
+|---|---|
+| `SUPABASE_URL` | La "Project URL" de tu proyecto de Supabase (Settings → API) |
+| `SUPABASE_SERVICE_ROLE_KEY` | La clave `service_role` de tu proyecto (Settings → API → **Project API keys**) |
+
+**Nunca compartas `SUPABASE_SERVICE_ROLE_KEY`** — da acceso total a tu base de
+datos y Storage, sin restricciones. Va solo en Vercel, nunca en código ni en
+el navegador.
+
+Luego: **Deployments → ⋯ → Redeploy**.
+
+### 4. Organización de las fotos
+
+Cada foto queda dentro de una carpeta según la categoría elegida en el
+formulario (`flores/`, `chocolates/`, `peluches/`, `combos/`) para que sea
+fácil encontrarlas en el dashboard de Supabase — es solo organización, la
+categoría real del producto sigue viviendo en `products.json`.
+
+---
+
 ## Notas
 - El carrito de compras se guarda en el navegador de cada cliente.
 - Las categorías y ocasiones (Flores, Chocolates, Peluches, Combos, etc.) son fijas por ahora — si quieres agregar una nueva, dímelo y la incorporamos.
-- Las fotos que subas desde el panel quedan guardadas en la carpeta `uploads/` de tu repositorio de GitHub.
-- Nunca compartas tu `GITHUB_TOKEN` ni tu `MP_ACCESS_TOKEN` fuera del panel de Vercel.
+- Las fotos que subas desde el panel quedan en Supabase Storage (bucket
+  `product-images`); las que subiste antes de este cambio siguen sirviéndose
+  desde la carpeta `uploads/` de tu repositorio de GitHub.
+- Nunca compartas tu `GITHUB_TOKEN`, `MP_ACCESS_TOKEN` ni `SUPABASE_SERVICE_ROLE_KEY` fuera del panel de Vercel.

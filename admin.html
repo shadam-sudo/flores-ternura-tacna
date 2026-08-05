@@ -555,9 +555,10 @@ async function uploadImageSlot(slot){
   statusEl.textContent = `Subiendo foto ${slot + 1}...`;
   const base64 = await fileToBase64(file);
   try{
+    const categoria = document.getElementById("p-categoria").value;
     const res = await fetch("/api/admin-upload-image", {
       method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ password: PASSWORD, filename: file.name, contentBase64: base64 })
+      body: JSON.stringify({ password: PASSWORD, filename: file.name, contentBase64: base64, contentType: file.type, categoria })
     });
     const data = await res.json();
     if(data.ok){
