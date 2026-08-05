@@ -25,6 +25,8 @@
   th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
   .mini-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.8rem;margin-right:4px;}
   .mini-btn.danger{color:#a12a2a;border-color:#e2b8b8;}
+  .mini-btn:disabled{opacity:.5;cursor:default;}
+  .mini-select{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:.8rem;}
   #login-screen{max-width:360px;margin:100px auto;text-align:center;}
   #status-msg{font-size:.9rem;margin-top:10px;padding:10px;border-radius:8px;display:none;}
   #status-msg.ok{display:block;background:#e7f3e5;color:#2c5a2a;}
@@ -35,9 +37,12 @@
   .order-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.75rem;font-weight:600;}
   .order-badge.pendiente{background:#fff3cd;color:#8a6d1a;}
   .order-badge.confirmado{background:#d1e7ff;color:#2255a4;}
+  .order-badge.recibido{background:#d3f0ec;color:#1a6b63;}
   .order-badge.en_preparacion{background:#e2d9f3;color:#5a3a94;}
+  .order-badge.en_camino{background:#ffe9b3;color:#8a5a00;}
   .order-badge.entregado{background:#d4edda;color:#256a34;}
   .order-badge.rechazado{background:#fbe6e6;color:#a12a2a;}
+  .order-badge.cancelado{background:#f0dede;color:#7a3a3a;}
   .order-badge.reembolsado{background:#e5e5e5;color:#555;}
   .order-badge.error{background:#fde2c8;color:#9a5a10;}
   .order-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -45,6 +50,7 @@
   .order-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fffdfb;}
   .order-card .top{display:flex;justify-content:space-between;align-items:flex-start;font-size:.92rem;font-weight:600;}
   .order-card .meta{font-size:.8rem;color:#6b5f57;margin:6px 0;}
+  .order-dedicatoria{font-size:.82rem;color:var(--wine, #7a2e3a);margin:4px 0;font-style:italic;}
   .order-card .actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
   .order-skeleton{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .order-skeleton .sk{height:110px;border-radius:10px;background:linear-gradient(90deg,#f3e7dc 25%,#f8f0e8 50%,#f3e7dc 75%);background-size:200% 100%;animation:sk-shimmer 1.4s infinite;}
@@ -389,9 +395,16 @@ async function loadState(){
 
 // ---------- Pedidos ----------
 const ESTADO_LABELS = {
-  pendiente: "Pendiente", confirmado: "Confirmado", en_preparacion: "En preparación",
-  entregado: "Entregado", rechazado: "Rechazado", reembolsado: "Reembolsado"
+  pendiente: "Pendiente", confirmado: "Aprobado / Confirmado", recibido: "Recibido",
+  en_preparacion: "En elaboración", en_camino: "En camino", entregado: "Entregado",
+  rechazado: "Rechazado", cancelado: "Cancelado", reembolsado: "Reembolsado"
 };
+
+// Secuencia del flujo normal — el botón "Marcar como siguiente" avanza un
+// paso dentro de esta lista. rechazado/cancelado/reembolsado quedan fuera
+// a propósito: no son "el siguiente paso" de nada, se llega a ellos desde
+// el selector (o automáticamente vía el webhook de MP).
+const ESTADO_SECUENCIA = ["pendiente", "confirmado", "recibido", "en_preparacion", "en_camino", "entregado"];
 
 function fmtFechaPeru(iso){
   try{
@@ -455,25 +468,58 @@ function orderCardHTML(o){
   // WhatsApp roto, simplemente no lo mostramos para esos casos.
   const waHref = /^51\d{9}$/.test(o.cliente_telefono || "") ? `https://wa.me/${o.cliente_telefono}` : null;
 
+  // La dedicatoria es tan visible como el nombre/teléfono del cliente — el
+  // cliente la escribió a propósito para que vaya en la tarjeta del pedido.
+  const conDedicatoria = items.filter(i => i.dedicatoria);
+  const dedicatoriaHTML = conDedicatoria.map(i => {
+    const nombreItem = items.length > 1 ? `${escapeHtml(i.nombre || i.title || "")}: ` : "";
+    return `<div class="order-dedicatoria">💌 ${nombreItem}"${escapeHtml(i.dedicatoria)}"</div>`;
+  }).join("");
+
+  // rechazado/cancelado/reembolsado quedan fuera de la secuencia normal a
+  // propósito — no tienen "siguiente paso", solo se salen de ahí vía el
+  // selector (reactivar) o los deja el webhook de MP.
+  const idxActual = ESTADO_SECUENCIA.indexOf(o.estado);
+  const siguienteEstado = idxActual >= 0 ? ESTADO_SECUENCIA[idxActual + 1] : undefined;
+
   let actions = "";
-  if(o.estado === "confirmado"){
-    actions += `<button class="mini-btn" onclick="advanceOrder('${o.id}','en_preparacion')">Marcar en preparación</button>`;
+  if(idxActual >= 0){
+    actions += siguienteEstado
+      ? `<button class="mini-btn" onclick="advanceOrder('${o.id}','${siguienteEstado}')">Marcar como ${ESTADO_LABELS[siguienteEstado]}</button>`
+      : `<button class="mini-btn" disabled>Entregado</button>`;
   }
-  if(o.estado === "en_preparacion"){
-    actions += `<button class="mini-btn" onclick="advanceOrder('${o.id}','entregado')">Marcar entregado</button>`;
-  }
+  actions += `
+    <select class="mini-select" onchange="if(this.value) advanceOrder('${o.id}', this.value); this.value='';">
+      <option value="">Cambiar a...</option>
+      ${Object.keys(ESTADO_LABELS).filter(e => e !== o.estado).map(e => `<option value="${e}">${ESTADO_LABELS[e]}</option>`).join("")}
+    </select>`;
   if(waHref){
     actions += `<a class="mini-btn" href="${waHref}" target="_blank" rel="noopener">WhatsApp</a>`;
   }
+  actions += `<button class="mini-btn danger" onclick="deleteOrder('${o.id}')">Eliminar</button>`;
 
   return `
     <div class="order-card">
       <div class="top"><span>${clienteNombre}</span><span>S/ ${Number(o.monto).toFixed(2)}</span></div>
       <div class="meta">${metodo} · ${fmtFechaPeru(o.fecha)}${clienteTelefono ? " · " + clienteTelefono : ""}</div>
       ${primerItem ? `<div class="meta">${primerItem}${masItems}</div>` : ""}
+      ${dedicatoriaHTML}
       <span class="order-badge ${badgeClass}">${badgeLabel}</span>
       <div class="actions">${actions}</div>
     </div>`;
+}
+
+async function deleteOrder(id){
+  if(!confirm("¿Seguro que quieres eliminar este pedido? Esta acción no se puede deshacer.")) return;
+  try{
+    const res = await fetch("/api/delete-order", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, id })
+    });
+    const data = await res.json();
+    if(!data.ok){ alert("Error: " + (data.error || "no se pudo eliminar")); return; }
+    loadOrders();
+  } catch(e){ alert("Error de conexión al eliminar el pedido."); }
 }
 
 async function advanceOrder(id, nuevoEstado){
