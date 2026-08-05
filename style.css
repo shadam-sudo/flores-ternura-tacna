@@ -113,6 +113,16 @@ section{padding:56px 0;}
 .cat-card span{font-size:.85rem; color:var(--sage);}
 
 .prod-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px;}
+/* Carrusel de "Más vendidos" — scroll horizontal nativo con snap, sin
+   librería de JS. Cada tarjeta reutiliza .prod-card, con un ancho fijo
+   porque acá es hijo de un flex, no de un grid. */
+.featured-scroll{
+  display:flex; gap:22px; overflow-x:auto; scroll-snap-type:x mandatory;
+  padding-bottom:8px; -webkit-overflow-scrolling:touch;
+}
+.featured-scroll .prod-card{flex:0 0 260px; scroll-snap-align:start;}
+.featured-scroll::-webkit-scrollbar{height:8px;}
+.featured-scroll::-webkit-scrollbar-thumb{background:var(--line); border-radius:8px;}
 .prod-card{
   background:#fff; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
   display:flex; flex-direction:column;
@@ -124,6 +134,7 @@ section{padding:56px 0;}
 .tag{font-size:.68rem; background:var(--cream); border:1px solid var(--line); color:var(--sage); padding:3px 8px; border-radius:20px;}
 .prod-body h3{font-size:1rem; min-height:2.4em;}
 .price{font-family:'Fraunces',serif; font-weight:700; color:var(--wine); font-size:1.25rem; margin-top:auto;}
+.price-original{font-family:'Work Sans',sans-serif; font-weight:400; color:#6b5f57; text-decoration:line-through; font-size:.85em; margin-right:6px;}
 .prod-actions{display:flex; gap:8px; margin-top:6px;}
 .btn-add{
   flex:1; background:var(--wine); color:#fff; border:none; padding:11px; border-radius:10px;

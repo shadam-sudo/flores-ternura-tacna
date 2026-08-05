@@ -1,3 +1,20 @@
+// ---------- Precio con oferta ----------
+// Único punto que decide si un producto tiene oferta activa — reutilizado
+// por la tarjeta (destacados + catálogo) y la ficha de producto, para que
+// el precio tachado se vea igual en todo lado sin duplicar la lógica.
+function tieneOferta(p){
+  return typeof p.precio_oferta === "number" && p.precio_oferta > 0 && p.precio_oferta < p.precio;
+}
+function precioEfectivo(p){
+  return tieneOferta(p) ? p.precio_oferta : p.precio;
+}
+function priceHTML(p, cssClass){
+  if(!tieneOferta(p)){
+    return `<div class="${cssClass}">S/ ${p.precio.toFixed(2)}</div>`;
+  }
+  return `<div class="${cssClass} has-offer"><span class="price-original">S/ ${p.precio.toFixed(2)}</span> S/ ${p.precio_oferta.toFixed(2)}</div>`;
+}
+
 // ---------- Render de tarjeta de producto ----------
 function productCardHTML(p){
   const imgs = (p.imagenes && p.imagenes.length) ? p.imagenes : [p.img || "ph-flor.svg"];
@@ -9,7 +26,7 @@ function productCardHTML(p){
           <span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span>
         </div>
         <h3><a href="producto.html?id=${p.id}" style="color:inherit;">${p.nombre}</a></h3>
-        <div class="price">S/ ${p.precio.toFixed(2)}</div>
+        ${priceHTML(p, "price")}
         <div class="prod-actions">
           <a href="producto.html?id=${p.id}" class="btn-add" style="text-align:center;text-decoration:none;">Ver y personalizar</a>
         </div>
@@ -39,11 +56,17 @@ function attachHoverCycle(container){
   });
 }
 
-// ---------- Home: destacados ----------
+// ---------- Home: más vendidos ----------
 function renderFeatured(){
   const el = document.getElementById("featured-grid");
-  if(!el) return;
-  const featured = PRODUCTS.slice(0, 8);
+  const section = document.getElementById("featured-section");
+  if(!el || !section) return;
+  const featured = PRODUCTS.filter(p => p.destacado);
+  if(!featured.length){
+    section.style.display = "none";
+    return;
+  }
+  section.style.display = "";
   el.innerHTML = featured.map(productCardHTML).join("");
   attachHoverCycle(el);
 }
@@ -414,7 +437,7 @@ function renderProductPage(){
       <div>
         <div class="prod-tags"><span class="tag">${CATEGORIAS.find(c=>c.key===p.categoria)?.label || p.categoria}</span></div>
         <h1 style="margin-top:10px;">${p.nombre}</h1>
-        <div class="pd-price price">S/ ${p.precio.toFixed(2)}</div>
+        ${priceHTML(p, "pd-price price")}
         <p style="color:#544943;line-height:1.6;">${p.desc || ""}</p>
 
         <div class="pd-trust">
@@ -447,7 +470,7 @@ function renderProductPage(){
               </div>
             </div>
           </div>
-          <button class="pd-cta" onclick="addProductFromPage(${p.id})">Agregar al carrito · S/ ${p.precio.toFixed(2)}</button>
+          <button class="pd-cta" onclick="addProductFromPage(${p.id})">Agregar al carrito · S/ ${precioEfectivo(p).toFixed(2)}</button>
           <p class="pd-note">Entrega solo en Tacna · Pago 100% seguro con Mercado Pago</p>
         </div>
 
