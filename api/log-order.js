@@ -1,9 +1,11 @@
-// Registra un pedido pagado por Yape/Plin/transferencia — métodos que hoy
-// no dejan ningún rastro automático en el sistema, solo WhatsApp.
-const crypto = require("crypto");
+// Registra un pedido pagado por Yape/Plin/transferencia, confirmado por el
+// dueño (requiere ADMIN_PASSWORD) después de ver la captura de pago real.
+// Para el registro automático (sin confirmar) que crea el checkout público
+// al hacer clic en "Ya pagué, confirmar por WhatsApp", ver public-order.js.
 const { sql } = require("../lib/db");
 const { checkRateLimit } = require("../lib/rate-limit");
 const { normalizePhone } = require("../lib/phone");
+const { buildDedupeKey } = require("../lib/dedupe");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -40,26 +42,19 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // Deduplicación de ventana corta: mismo teléfono + monto en los últimos
-  // 30s se trata como el mismo envío (doble clic o reintento de red), no
-  // como un segundo pedido.
-  const dedupeKey = crypto
-    .createHash("sha256")
-    .update(`${telefono}:${Number(monto).toFixed(2)}:${Math.floor(Date.now() / 30000)}`)
-    .digest("hex");
+  const dedupeKey = buildDedupeKey(telefono, monto);
 
   try {
-    const existing = await sql`SELECT id FROM orders WHERE dedupe_key = ${dedupeKey} LIMIT 1;`;
-    if (existing.length) {
-      res.status(200).json({ ok: true, deduped: true });
-      return;
-    }
-
-    await sql`
+    // Upsert atómico: ON CONFLICT DO NOTHING contra la restricción UNIQUE
+    // de dedupe_key cierra la condición de carrera de dos solicitudes casi
+    // simultáneas — un check-then-insert por separado no la cierra.
+    const rows = await sql`
       INSERT INTO orders (cliente_nombre, cliente_telefono, items, monto, metodo, estado, dedupe_key)
-      VALUES (${cliente_nombre}, ${telefono}, ${JSON.stringify(items || [])}::jsonb, ${Number(monto)}, ${metodo}, 'confirmado', ${dedupeKey});
+      VALUES (${cliente_nombre}, ${telefono}, ${JSON.stringify(items || [])}::jsonb, ${Number(monto)}, ${metodo}, 'confirmado', ${dedupeKey})
+      ON CONFLICT (dedupe_key) DO NOTHING
+      RETURNING id;
     `;
-    res.status(200).json({ ok: true });
+    res.status(200).json({ ok: true, deduped: rows.length === 0 });
   } catch (err) {
     console.error("log-order: error al guardar", err.message);
     res.status(500).json({ error: "Error al guardar el pedido." });
