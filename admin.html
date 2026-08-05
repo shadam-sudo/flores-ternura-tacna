@@ -48,6 +48,9 @@
   .order-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   @media (max-width: 700px){ .order-cards{grid-template-columns:1fr;} }
   .order-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fffdfb;}
+  .order-card-header{display:flex;gap:10px;}
+  .order-thumb{width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#f0e8e0;}
+  .order-card-info{flex:1;min-width:0;}
   .order-card .top{display:flex;justify-content:space-between;align-items:flex-start;font-size:.92rem;font-weight:600;}
   .order-card .meta{font-size:.8rem;color:#6b5f57;margin:6px 0;}
   .order-dedicatoria{font-size:.82rem;color:var(--wine, #7a2e3a);margin:4px 0;font-style:italic;}
@@ -458,6 +461,10 @@ function orderCardHTML(o){
   const items = Array.isArray(o.items) ? o.items : [];
   const primerItem = escapeHtml(items[0] ? (items[0].nombre || items[0].title || "") : "");
   const masItems = items.length > 1 ? ` +${items.length - 1} más` : "";
+  // Solo la imagen del primer ítem — pedidos viejos (de antes de este
+  // campo) o registros manuales simplemente no la tienen.
+  const primerImg = items[0]?.img ? escapeHtml(items[0].img) : null;
+  const thumbHTML = primerImg ? `<img class="order-thumb" src="${primerImg}" alt="" loading="lazy">` : "";
   const badgeClass = o.verification_error ? "error" : o.estado;
   const badgeLabel = o.verification_error ? "Verificación pendiente por error" : (ESTADO_LABELS[o.estado] || o.estado);
   const clienteNombre = escapeHtml(o.cliente_nombre || "Sin nombre");
@@ -466,7 +473,8 @@ function orderCardHTML(o){
   // Pedidos de Mercado Pago pueden traer un teléfono que no se pudo
   // normalizar (número extranjero, formato raro) — en vez de un botón de
   // WhatsApp roto, simplemente no lo mostramos para esos casos.
-  const waHref = /^51\d{9}$/.test(o.cliente_telefono || "") ? `https://wa.me/${o.cliente_telefono}` : null;
+  const waMensaje = "Somos de la Florería Ternura Tacna, esperamos se encuentre muy bien. Le escribimos para confirmar su pedido y coordinar algunos ajustes que lo crea conveniente.";
+  const waHref = /^51\d{9}$/.test(o.cliente_telefono || "") ? `https://wa.me/${o.cliente_telefono}?text=${encodeURIComponent(waMensaje)}` : null;
 
   // La dedicatoria es tan visible como el nombre/teléfono del cliente — el
   // cliente la escribió a propósito para que vaya en la tarjeta del pedido.
@@ -493,6 +501,7 @@ function orderCardHTML(o){
       <option value="">Cambiar a...</option>
       ${Object.keys(ESTADO_LABELS).filter(e => e !== o.estado).map(e => `<option value="${e}">${ESTADO_LABELS[e]}</option>`).join("")}
     </select>`;
+  actions += `<button class="mini-btn" onclick="copyTrackingLink('${o.id}', this)">Copiar link</button>`;
   if(waHref){
     actions += `<a class="mini-btn" href="${waHref}" target="_blank" rel="noopener">WhatsApp</a>`;
   }
@@ -500,13 +509,30 @@ function orderCardHTML(o){
 
   return `
     <div class="order-card">
-      <div class="top"><span>${clienteNombre}</span><span>S/ ${Number(o.monto).toFixed(2)}</span></div>
-      <div class="meta">${metodo} · ${fmtFechaPeru(o.fecha)}${clienteTelefono ? " · " + clienteTelefono : ""}</div>
-      ${primerItem ? `<div class="meta">${primerItem}${masItems}</div>` : ""}
+      <div class="order-card-header">
+        ${thumbHTML}
+        <div class="order-card-info">
+          <div class="top"><span>${clienteNombre}</span><span>S/ ${Number(o.monto).toFixed(2)}</span></div>
+          <div class="meta">${metodo} · ${fmtFechaPeru(o.fecha)}${clienteTelefono ? " · " + clienteTelefono : ""}</div>
+          ${primerItem ? `<div class="meta">${primerItem}${masItems}</div>` : ""}
+        </div>
+      </div>
       ${dedicatoriaHTML}
       <span class="order-badge ${badgeClass}">${badgeLabel}</span>
       <div class="actions">${actions}</div>
     </div>`;
+}
+
+async function copyTrackingLink(id, btn){
+  const url = `${window.location.origin}/seguimiento.html?id=${id}`;
+  try{
+    await navigator.clipboard.writeText(url);
+    const original = btn.textContent;
+    btn.textContent = "¡Copiado!";
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  } catch(e){
+    alert("No se pudo copiar. Link: " + url);
+  }
 }
 
 async function deleteOrder(id){
