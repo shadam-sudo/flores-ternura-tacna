@@ -311,7 +311,7 @@ async function confirmarPagoWhatsApp(){
       method: "POST", headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         cliente_nombre: clienteNombre, cliente_telefono: clienteTelefono, metodo,
-        monto: total, items: cart.map(i => ({ nombre: i.nombre, qty: i.qty }))
+        monto: total, items: cart.map(i => ({ nombre: i.nombre, qty: i.qty, dedicatoria: i.dedicatoria || undefined }))
       })
     });
   } catch(e){ /* red o servidor caído — no bloquea la confirmación por WhatsApp */ }
@@ -348,7 +348,7 @@ async function pagarConMercadoPago(){
       let title = i.nombre;
       if(i.fecha) title += ` (Entrega: ${i.fecha}, ${i.horario === "9am-1pm" ? "9am-1pm" : "1pm-6pm"})`;
       if(promoValida) title += ` [${promo.codigo} -${promo.porcentaje}%]`;
-      return { title, qty: i.qty, price: Math.round(i.precio * factor * 100) / 100 };
+      return { title, qty: i.qty, price: Math.round(i.precio * factor * 100) / 100, dedicatoria: i.dedicatoria || undefined };
     });
     const zonaSel = getZonaSeleccionada();
     if(zonaSel && zonaSel.precio > 0){

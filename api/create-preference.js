@@ -4,6 +4,22 @@
 
 const { MercadoPagoConfig, Preference } = require("mercadopago");
 
+const MP_ITEMS_METADATA_BUDGET = 1000;
+const DEDICATORIA_METADATA_MAX = 140;
+
+function buildMpItemsMetadata(items) {
+  const withDedicatoria = items.map((i) => ({
+    nombre: i.title,
+    qty: i.qty,
+    ...(i.dedicatoria ? { dedicatoria: String(i.dedicatoria).slice(0, DEDICATORIA_METADATA_MAX) } : {}),
+  }));
+  const full = JSON.stringify(withDedicatoria);
+  if (full.length <= MP_ITEMS_METADATA_BUDGET) return full;
+
+  const withoutDedicatoria = JSON.stringify(items.map((i) => ({ nombre: i.title, qty: i.qty })));
+  return withoutDedicatoria.slice(0, MP_ITEMS_METADATA_BUDGET);
+}
+
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Método no permitido" });
@@ -50,7 +66,13 @@ module.exports = async (req, res) => {
         metadata: {
           cliente_nombre: String(cliente_nombre || "").slice(0, 200),
           cliente_telefono: String(cliente_telefono || "").slice(0, 20),
-          items: JSON.stringify(items.map((i) => ({ nombre: i.title, qty: i.qty }))).slice(0, 1000),
+          // Un slice(0,1000) crudo sobre el JSON ya armado puede cortar a
+          // mitad de un string y dejar JSON inválido — el webhook lo
+          // descartaría entero (try/catch a []). En vez de eso, truncamos
+          // la dedicatoria (el campo más largo y menos crítico) primero, y
+          // si el carrito tiene tantos ítems que igual no entra, la
+          // quitamos por completo antes de perder nombre/qty.
+          items: buildMpItemsMetadata(items),
         },
       },
     });
