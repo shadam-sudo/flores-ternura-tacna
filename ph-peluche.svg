@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <rect width="400" height="400" fill="#F2DCE6"/>
-  <g fill="#E0A33A">
+  <g fill="#996A1A">
     <circle cx="160" cy="130" r="24"/>
     <circle cx="240" cy="130" r="24"/>
     <circle cx="200" cy="170" r="60"/>
@@ -14,5 +14,5 @@
   <circle cx="218" cy="165" r="6" fill="#3B241C"/>
   <ellipse cx="200" cy="185" rx="10" ry="7" fill="#3B241C"/>
   <path d="M185,300 Q200,315 215,300" stroke="#B5426F" stroke-width="6" fill="none"/>
-  <text x="200" y="380" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#9c8f86">foto próximamente</text>
+  <text x="200" y="380" text-anchor="middle" font-family="'Work Sans', Arial, sans-serif" font-size="16" fill="#6b5f57">foto próximamente</text>
 </svg>

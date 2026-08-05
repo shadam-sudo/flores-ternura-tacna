@@ -7,7 +7,7 @@
   <line x1="163" y1="146" x2="163" y2="254" stroke="#5c3a2c" stroke-width="4"/>
   <line x1="200" y1="146" x2="200" y2="254" stroke="#5c3a2c" stroke-width="4"/>
   <line x1="237" y1="146" x2="237" y2="254" stroke="#5c3a2c" stroke-width="4"/>
-  <rect x="185" y="118" width="30" height="26" fill="#E0A33A"/>
-  <path d="M170,118 Q200,90 230,118" stroke="#E0A33A" stroke-width="8" fill="none"/>
-  <text x="200" y="370" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#9c8f86">foto próximamente</text>
+  <rect x="185" y="118" width="30" height="26" fill="#996A1A"/>
+  <path d="M170,118 Q200,90 230,118" stroke="#996A1A" stroke-width="8" fill="none"/>
+  <text x="200" y="370" text-anchor="middle" font-family="'Work Sans', Arial, sans-serif" font-size="16" fill="#6b5f57">foto próximamente</text>
 </svg>
