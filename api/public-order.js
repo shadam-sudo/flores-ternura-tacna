@@ -1,7 +1,9 @@
-// Registra un pedido pagado por Yape/Plin/transferencia, confirmado por el
-// dueño (requiere ADMIN_PASSWORD) después de ver la captura de pago real.
-// Para el registro automático (sin confirmar) que crea el checkout público
-// al hacer clic en "Ya pagué, confirmar por WhatsApp", ver public-order.js.
+// Crea un pedido SIN CONFIRMAR cuando un cliente hace clic en "Ya pagué,
+// confirmar por WhatsApp" en el checkout público (Yape/Plin/Transferencia).
+// A diferencia de log-order.js (que requiere ADMIN_PASSWORD porque el
+// dueño ya vio la captura de pago real), este endpoint es público — por
+// eso SIEMPRE guarda el pedido en estado "pendiente", nunca "confirmado".
+// El dueño confirma con un clic en el panel cuando ve el pago de verdad.
 const { sql } = require("../lib/db");
 const { checkRateLimit } = require("../lib/rate-limit");
 const { normalizePhone } = require("../lib/phone");
@@ -14,25 +16,22 @@ module.exports = async (req, res) => {
   }
 
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "unknown";
-  const { allowed } = await checkRateLimit(`log-order:${ip}`, { limit: 20, windowSeconds: 60 });
+  // Límite más estricto que log-order.js (endpoint del admin): este es
+  // público, sin contraseña, así que necesita más resguardo contra spam.
+  const { allowed } = await checkRateLimit(`public-order:${ip}`, { limit: 10, windowSeconds: 60 });
   if (!allowed) {
     res.status(429).json({ error: "Demasiados intentos, espera un momento." });
     return;
   }
 
-  const { password, cliente_nombre, cliente_telefono, items, monto, metodo } = req.body || {};
-
-  if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
-    res.status(401).json({ error: "Contraseña incorrecta." });
-    return;
-  }
+  const { cliente_nombre, cliente_telefono, items, monto, metodo } = req.body || {};
 
   if (!cliente_nombre || !cliente_telefono || !monto || !metodo) {
     res.status(400).json({ error: "Faltan datos del pedido (nombre, teléfono, monto, método)." });
     return;
   }
   if (!["yape", "plin", "transferencia"].includes(metodo)) {
-    res.status(400).json({ error: "Método inválido para registro manual." });
+    res.status(400).json({ error: "Método inválido." });
     return;
   }
 
@@ -45,18 +44,15 @@ module.exports = async (req, res) => {
   const dedupeKey = buildDedupeKey(telefono, monto);
 
   try {
-    // Upsert atómico: ON CONFLICT DO NOTHING contra la restricción UNIQUE
-    // de dedupe_key cierra la condición de carrera de dos solicitudes casi
-    // simultáneas — un check-then-insert por separado no la cierra.
     const rows = await sql`
       INSERT INTO orders (cliente_nombre, cliente_telefono, items, monto, metodo, estado, dedupe_key)
-      VALUES (${cliente_nombre}, ${telefono}, ${JSON.stringify(items || [])}::jsonb, ${Number(monto)}, ${metodo}, 'confirmado', ${dedupeKey})
+      VALUES (${cliente_nombre}, ${telefono}, ${JSON.stringify(items || [])}::jsonb, ${Number(monto)}, ${metodo}, 'pendiente', ${dedupeKey})
       ON CONFLICT (dedupe_key) DO NOTHING
       RETURNING id;
     `;
     res.status(200).json({ ok: true, deduped: rows.length === 0 });
   } catch (err) {
-    console.error("log-order: error al guardar", err.message);
+    console.error("public-order: error al guardar", err.message);
     res.status(500).json({ error: "Error al guardar el pedido." });
   }
 };

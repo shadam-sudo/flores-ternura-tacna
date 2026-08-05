@@ -24,7 +24,17 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_estado_fecha ON orders (estado, fecha DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_metodo ON orders (metodo);
-CREATE INDEX IF NOT EXISTS idx_orders_dedupe_key ON orders (dedupe_key) WHERE dedupe_key IS NOT NULL;
+-- UNIQUE (no solo un índice normal): el check-then-insert por sí solo no
+-- basta contra dos solicitudes casi simultáneas (doble clic real, no solo
+-- reintento) — ambas podrían pasar el SELECT antes de que cualquiera
+-- termine el INSERT. La restricción UNIQUE + upsert atómico en el código
+-- es lo que realmente cierra la condición de carrera.
+--
+-- Si ya ejecutaste una versión anterior de este schema (el índice ya existe
+-- pero SIN unique), este CREATE no lo va a reemplazar solo — corre esto
+-- una vez primero:
+--   DROP INDEX IF EXISTS idx_orders_dedupe_key;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_dedupe_key ON orders (dedupe_key) WHERE dedupe_key IS NOT NULL;
 
 -- Contador de intentos fallidos de login/acciones admin, persistente entre
 -- invocaciones serverless (a diferencia de un contador en memoria).
