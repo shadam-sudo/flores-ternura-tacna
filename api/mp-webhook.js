@@ -6,8 +6,9 @@
 //   MP_WEBHOOK_SECRET  -> "Clave secreta" que Mercado Pago genera al
 //                          registrar la URL del webhook en tu aplicación
 //                          (Tus integraciones -> [tu app] -> Webhooks).
-//   POSTGRES_URL        -> la provee Vercel automáticamente al conectar
-//                          una base de datos Postgres al proyecto.
+//   SUPABASE_DB_URL     -> cadena de conexión "Transaction pooler" de
+//                          Supabase (Project Settings -> Database), agregada
+//                          a mano en Vercel.
 const crypto = require("crypto");
 const { sql } = require("../lib/db");
 const { checkRateLimit } = require("../lib/rate-limit");

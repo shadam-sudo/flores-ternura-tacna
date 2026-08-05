@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
     // Orden por defecto: pendientes/rechazados sin revisar primero, luego
     // por fecha reciente — no cronológico puro. Ese default es lo que evita
     // repetir la falla original (un pedido confundido entre los demás).
-    const { rows } = await sql`
+    const rows = await sql`
       SELECT id, fecha, cliente_nombre, cliente_telefono, items, monto, metodo, estado, verification_error, mp_payment_id
       FROM orders
       WHERE (${estado ?? null}::text IS NULL OR estado = ${estado ?? null})

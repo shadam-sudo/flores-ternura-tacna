@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
 
   try {
     const existing = await sql`SELECT id FROM orders WHERE dedupe_key = ${dedupeKey} LIMIT 1;`;
-    if (existing.rows.length) {
+    if (existing.length) {
       res.status(200).json({ ok: true, deduped: true });
       return;
     }

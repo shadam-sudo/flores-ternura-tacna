@@ -38,11 +38,11 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { rowCount } = await sql`
+    const result = await sql`
       UPDATE orders SET estado = ${nuevo_estado}
       WHERE id = ${id} AND estado = ANY(${requiredFrom});
     `;
-    if (!rowCount) {
+    if (!result.count) {
       res.status(409).json({ error: "El pedido ya no está en el estado esperado — refresca la vista." });
       return;
     }

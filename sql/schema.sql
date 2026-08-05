@@ -1,10 +1,9 @@
 -- Esquema de pedidos para Flores & Ternura Tacna.
--- Ejecutar una sola vez contra la base de datos Postgres del proyecto
--- (Vercel Postgres -> tab "Query" del dashboard, o `psql "$POSTGRES_URL"`).
+-- Ejecutar una sola vez en Supabase -> SQL Editor del dashboard del proyecto
+-- (o `psql "$SUPABASE_DB_URL"`).
 
--- gen_random_uuid() viene incluido en Postgres 13+ (y en el Postgres de
--- Vercel/Neon) sin necesitar extensión — esta línea es solo un respaldo
--- por si la base de datos es más antigua.
+-- gen_random_uuid() viene incluido en Postgres 13+ sin necesitar extensión
+-- — esta línea es solo un respaldo por si acaso.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -34,3 +33,15 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   attempts   integer NOT NULL DEFAULT 1,
   window_start timestamptz NOT NULL DEFAULT now()
 );
+
+-- Supabase expone automáticamente cualquier tabla del schema "public" vía
+-- su API REST (PostgREST) a quien tenga la clave publicable/anon — sin
+-- esto, cualquiera con esa clave (pensada para ser pública, embebida en el
+-- navegador) podría leer nombres, teléfonos e historial de pedidos
+-- directamente, sin pasar por los endpoints ni el rate limiting de la
+-- app. La app se conecta con el rol "postgres" (el connection string
+-- pooled), que sigue teniendo acceso total — RLS solo bloquea el acceso
+-- vía la API REST con las claves anon/service_role. Sin políticas
+-- definidas, RLS activado significa "denegado por defecto" para esa vía.
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;

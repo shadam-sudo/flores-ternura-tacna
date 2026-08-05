@@ -5,6 +5,6 @@
   "description": "Tienda online de flores, chocolates y peluches con delivery en Tacna, Peru.",
   "dependencies": {
     "mercadopago": "^2.0.9",
-    "@vercel/postgres": "^0.10.0"
+    "postgres": "^3.4.5"
   }
 }

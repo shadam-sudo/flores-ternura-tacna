@@ -71,15 +71,25 @@ Nuevos en `api/`: `mp-webhook.js`, `log-order.js`, `list-orders.js`,
 `main.js`, `carrito.html` (sin cambios de contenido, pero revisa que cargue
 `main.js` actualizado), `api/create-preference.js`, `package.json`.
 
-### 2. Conecta una base de datos Postgres al proyecto en Vercel
+### 2. Conecta la base de datos Postgres de Supabase
 
-1. En tu proyecto de Vercel → pestaña **Storage** → **Create Database** →
-   elige **Postgres** (Neon) → conéctala a este proyecto.
-2. Vercel agrega automáticamente la variable `POSTGRES_URL` (y otras
-   relacionadas) a tu proyecto — no hace falta copiarla a mano.
-3. Ve a la pestaña **Query** de la base de datos y pega el contenido completo
-   de `sql/schema.sql` → ejecútalo una sola vez. Esto crea las tablas
-   `orders` y `rate_limits`.
+1. En tu proyecto de Supabase → **Project Settings → Database → Connection
+   string** → elige el modo **Transaction** (pooler, puerto `6543`). Copia
+   esa cadena de conexión y reemplaza `[YOUR-PASSWORD]` por tu contraseña de
+   base de datos (la que pusiste al crear el proyecto, o resetéala ahí
+   mismo si no la recuerdas).
+   **Importante:** este proyecto usa el connection string de Postgres, NO
+   la clave publicable ni la clave secreta de la API de Supabase — esas dos
+   son para Auth/Storage/REST, no para conectarse directo a la base de datos.
+2. En Vercel → tu proyecto → **Settings → Environment Variables**, agrega
+   `SUPABASE_DB_URL` con esa cadena de conexión. El modo Transaction es
+   obligatorio en serverless (el modo directo agota el límite de conexiones
+   del proyecto bajo tráfico concurrente — ver `lib/db.js`).
+3. En Supabase → **SQL Editor**, pega el contenido completo de
+   `sql/schema.sql` → ejecútalo una sola vez. Esto crea las tablas `orders`
+   y `rate_limits`, con Row Level Security activado (así nadie puede leer
+   pedidos vía la API pública de Supabase con la clave publicable — solo la
+   propia app, conectada directo con la contraseña de la base de datos).
 
 ### 3. Registra el webhook en tu aplicación de Mercado Pago
 
@@ -95,8 +105,8 @@ Nuevos en `api/`: `mp-webhook.js`, `log-order.js`, `list-orders.js`,
 |---|---|
 | `MP_WEBHOOK_SECRET` | La "Clave secreta" del paso 3 |
 
-(`POSTGRES_URL` ya la agregó Vercel automáticamente en el paso 2; las demás
-variables — `ADMIN_PASSWORD`, `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`,
+(`SUPABASE_DB_URL` la agregaste tú mismo en el paso 2; las demás variables —
+`ADMIN_PASSWORD`, `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`,
 `MP_ACCESS_TOKEN` — ya existían.)
 
 Luego: **Deployments → ⋯ → Redeploy**.
