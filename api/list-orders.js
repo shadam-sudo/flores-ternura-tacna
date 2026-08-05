@@ -43,7 +43,21 @@ module.exports = async (req, res) => {
         fecha DESC
       LIMIT ${lim} OFFSET ${off};
     `;
-    res.status(200).json({ ok: true, orders: rows });
+    // items es jsonb en Postgres, pero postgres.js no lo autoparsea de
+    // vuelta a través del pooler de Supabase (Supavisor) — vuelve como
+    // string crudo en vez de array. Sin este parse, admin.html recibe
+    // Array.isArray(o.items) === false para TODO pedido, y nunca muestra
+    // productos ni dedicatoria, sin ningún error visible.
+    const orders = rows.map((r) => {
+      if (typeof r.items !== "string") return r;
+      try {
+        return { ...r, items: JSON.parse(r.items) };
+      } catch {
+        // Un solo pedido con items corrupto no debe tumbar la lista entera.
+        return { ...r, items: [] };
+      }
+    });
+    res.status(200).json({ ok: true, orders });
   } catch (err) {
     console.error("list-orders: error al leer", err.message);
     res.status(500).json({ error: "Error al leer los pedidos." });
