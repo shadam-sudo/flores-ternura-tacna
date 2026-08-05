@@ -1,12 +1,22 @@
-// Sube una foto de producto al repositorio de GitHub (carpeta /uploads) y
-// devuelve la URL pública para usarla de inmediato en el catálogo.
+// Sube una foto de producto a Supabase Storage (bucket público) y devuelve
+// la URL pública para usarla de inmediato en el catálogo. Antes esto
+// commiteaba el archivo al repo de GitHub — las fotos ya subidas por ese
+// camino se quedan sirviéndose desde ahí, esto solo cambia las NUEVAS.
+const { supabase, BUCKET } = require("../lib/supabase-storage");
+
+// Duplicado a propósito de CATEGORIAS en taxonomy.js (ese archivo es un
+// script de navegador sin module.exports) — sirve solo para no dejar que
+// un valor arbitrario de categoria termine como parte de la ruta del
+// archivo en Storage.
+const CATEGORIAS_VALIDAS = ["flores", "chocolates", "peluches", "combos"];
+
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Método no permitido" });
     return;
   }
 
-  const { password, filename, contentBase64 } = req.body || {};
+  const { password, filename, contentBase64, contentType, categoria } = req.body || {};
 
   if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
     res.status(401).json({ error: "Contraseña incorrecta." });
@@ -16,43 +26,24 @@ module.exports = async (req, res) => {
     res.status(400).json({ error: "Falta la imagen." });
     return;
   }
-
-  const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPO;
-  const branch = process.env.GITHUB_BRANCH || "main";
-
-  if (!token || !repo) {
-    res.status(500).json({ error: "Falta configurar GITHUB_TOKEN o GITHUB_REPO en Vercel." });
+  if (contentType && !contentType.startsWith("image/")) {
+    res.status(400).json({ error: "El archivo debe ser una imagen." });
     return;
   }
 
-  const safeName = `uploads/${Date.now()}-${filename.replace(/[^a-zA-Z0-9.\-_]/g, "")}`;
-  const apiUrl = `https://api.github.com/repos/${repo}/contents/${safeName}`;
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    "User-Agent": "flores-ternura-admin",
-    "Content-Type": "application/json",
-  };
+  const carpeta = CATEGORIAS_VALIDAS.includes(categoria) ? categoria : "otros";
+  const safeName = `${carpeta}/${Date.now()}-${filename.replace(/[^a-zA-Z0-9.\-_]/g, "")}`;
+  const buffer = Buffer.from(contentBase64, "base64");
 
   try {
-    const putRes = await fetch(apiUrl, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({
-        message: `Subir imagen ${safeName}`,
-        content: contentBase64,
-        branch,
-      }),
-    });
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(safeName, buffer, { contentType: contentType || "application/octet-stream", upsert: false });
 
-    if (!putRes.ok) {
-      const err = await putRes.json();
-      throw new Error(err.message || "GitHub rechazó la imagen.");
-    }
+    if (uploadError) throw new Error(uploadError.message);
 
-    // URL pública inmediata (no necesita esperar el redeploy de Vercel)
-    const url = `https://raw.githubusercontent.com/${repo}/${branch}/${safeName}`;
-    res.status(200).json({ ok: true, url });
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(safeName);
+    res.status(200).json({ ok: true, url: data.publicUrl });
   } catch (err) {
     res.status(500).json({ error: err.message || "Error al subir la imagen." });
   }

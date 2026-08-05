@@ -1,9 +1,10 @@
 {
   "name": "flores-ternura-tacna",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Tienda online de flores, chocolates y peluches con delivery en Tacna, Peru.",
   "dependencies": {
-    "mercadopago": "^2.0.9"
+    "mercadopago": "^2.0.9",
+    "@supabase/supabase-js": "^2.45.4"
   }
 }
