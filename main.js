@@ -623,6 +623,9 @@ function applySiteConfig(){
   document.querySelectorAll(".email-link").forEach(el => {
     if(SITE.email){ el.href = "mailto:" + SITE.email; el.textContent = SITE.email; }
   });
+  if(SITE.hero_img){
+    document.querySelectorAll("[data-hero-img]").forEach(img => { img.src = SITE.hero_img; });
+  }
   renderFooterSocial();
 }
 

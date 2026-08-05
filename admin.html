@@ -124,6 +124,18 @@
   </div>
 
   <div class="admin-card">
+    <h2>Foto principal de la tienda (hero)</h2>
+    <p style="color:#6b5f57;font-size:.88rem;margin-top:-8px;">
+      La foto grande de la portada, al lado del título. Si no subes una, se muestra un dibujo de flor de relleno.
+    </p>
+    <div class="field">
+      <input type="file" id="hero-img-file" accept="image/*" onchange="uploadHeroImage()" style="width:200px;">
+      <img id="hero-img-preview" src="" alt="" style="display:none;width:120px;height:120px;object-fit:cover;border-radius:12px;margin-top:8px;">
+      <div id="hero-img-status" style="font-size:.8rem;color:#6b5f57;margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <div class="admin-card">
     <h2>Datos de contacto</h2>
     <div class="row2">
       <div class="field">
@@ -347,6 +359,11 @@ async function loadState(){
   const res = await fetch("products.json?t=" + Date.now());
   const data = await res.json();
   STATE = { site: data.site || {}, products: data.products || [] };
+  if(STATE.site.hero_img){
+    const heroPreview = document.getElementById("hero-img-preview");
+    heroPreview.src = STATE.site.hero_img;
+    heroPreview.style.display = "block";
+  }
   document.getElementById("site-whatsapp").value = STATE.site.whatsapp || "";
   document.getElementById("site-email").value = STATE.site.email || "";
 
@@ -615,6 +632,32 @@ function renderTable(){
         <button class="mini-btn danger" onclick="deleteProduct(${p.id})">Eliminar</button>
       </td>
     </tr>`).join("");
+}
+
+async function uploadHeroImage(){
+  const file = document.getElementById("hero-img-file").files[0];
+  if(!file) return;
+  const statusEl = document.getElementById("hero-img-status");
+  statusEl.textContent = "Subiendo...";
+  const base64 = await fileToBase64(file);
+  try{
+    const res = await fetch("/api/admin-upload-image", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password: PASSWORD, filename: file.name, contentBase64: base64, contentType: file.type })
+    });
+    const data = await res.json();
+    if(data.ok){
+      STATE.site.hero_img = data.url;
+      const preview = document.getElementById("hero-img-preview");
+      preview.src = data.url;
+      preview.style.display = "block";
+      statusEl.textContent = "Lista ✓ — dale a \"Publicar cambios en la tienda\" para que se vea en la portada.";
+    } else {
+      statusEl.textContent = "Error: " + (data.error || "no se pudo subir");
+    }
+  } catch(e){
+    statusEl.textContent = "Error de conexión al subir la imagen.";
+  }
 }
 
 let pendingImgs = [null, null, null];   // nuevas subidas en esta sesión (por slot)
