@@ -55,6 +55,68 @@ Entra a `https://tu-sitio.vercel.app/admin.html`, ingresa tu contraseña, y ya p
 
 ---
 
+## Nuevo: Pedidos + verificación real de Mercado Pago
+
+Antes, el checkout solo redirigía al navegador del cliente a `gracias.html`
+cuando Mercado Pago aprobaba — sin confirmar nada del lado del servidor, y sin
+ningún registro de pedidos por Yape/Plin/transferencia. Ahora el panel tiene
+una pestaña **Pedidos** con todos los pedidos (cualquier método de pago) en un
+solo lugar, y Mercado Pago se verifica de verdad contra la API de pagos.
+
+### 1. Sube estos archivos nuevos/actualizados
+
+Nuevos en `api/`: `mp-webhook.js`, `log-order.js`, `list-orders.js`,
+`update-order-status.js`. Nuevos en `lib/`: `db.js`, `phone.js`,
+`rate-limit.js`. Nuevo en `sql/`: `schema.sql`. Actualizados: `admin.html`,
+`main.js`, `carrito.html` (sin cambios de contenido, pero revisa que cargue
+`main.js` actualizado), `api/create-preference.js`, `package.json`.
+
+### 2. Conecta una base de datos Postgres al proyecto en Vercel
+
+1. En tu proyecto de Vercel → pestaña **Storage** → **Create Database** →
+   elige **Postgres** (Neon) → conéctala a este proyecto.
+2. Vercel agrega automáticamente la variable `POSTGRES_URL` (y otras
+   relacionadas) a tu proyecto — no hace falta copiarla a mano.
+3. Ve a la pestaña **Query** de la base de datos y pega el contenido completo
+   de `sql/schema.sql` → ejecútalo una sola vez. Esto crea las tablas
+   `orders` y `rate_limits`.
+
+### 3. Registra el webhook en tu aplicación de Mercado Pago
+
+1. Ve a https://www.mercadopago.com.pe/developers/panel → tu aplicación →
+   **Webhooks** → **Configurar notificaciones**.
+2. URL del webhook: `https://tu-sitio.vercel.app/api/mp-webhook`
+3. Evento a suscribir: **Pagos** (payments).
+4. Mercado Pago te muestra una **"Clave secreta"** — cópiala.
+
+### 4. Agrega esta variable de entorno nueva en Vercel
+
+| Variable | Valor |
+|---|---|
+| `MP_WEBHOOK_SECRET` | La "Clave secreta" del paso 3 |
+
+(`POSTGRES_URL` ya la agregó Vercel automáticamente en el paso 2; las demás
+variables — `ADMIN_PASSWORD`, `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`,
+`MP_ACCESS_TOKEN` — ya existían.)
+
+Luego: **Deployments → ⋯ → Redeploy**.
+
+### 5. Usa la pestaña Pedidos
+
+Entra a `admin.html` — la primera sección ahora es **Pedidos**: los que
+necesitan tu atención (pendientes o rechazados sin revisar) aparecen primero.
+Los pedidos de Mercado Pago aparecen solos cuando el cliente paga (verificado
+de verdad, no solo por el redirect). Para Yape/Plin/transferencia, regístralos
+tú mismo con el formulario "Registrar pedido manual" — toma menos de 30
+segundos. Desde cada pedido puedes marcarlo "en preparación" → "entregado", y
+enviar un WhatsApp directo al cliente con el botón de la tarjeta.
+
+**Nota de alcance:** este cambio no toca el archivo huérfano `admin ok.html`
+(un fix de compresión de imágenes que quedó sin aplicar al `admin.html` real)
+— es un bug aparte, pendiente.
+
+---
+
 ## Notas
 - El carrito de compras se guarda en el navegador de cada cliente.
 - Las categorías y ocasiones (Flores, Chocolates, Peluches, Combos, etc.) son fijas por ahora — si quieres agregar una nueva, dímelo y la incorporamos.
